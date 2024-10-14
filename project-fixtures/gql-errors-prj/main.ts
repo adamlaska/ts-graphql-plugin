@@ -12,11 +12,15 @@ const tooComplexExpressionQuery = gql`
   query {
     ${getField()}
   }
-`
+`;
+const semanticErrorFragment = gql`
+  fragment MyFragment on Query {
+    hoge
+  }
+`;
 
-const semanticErrorQUery = gql`
-  query {
-    helo
-    helloWorld
+const duplicatedFragment = gql`
+  fragment MyFragment on Query {
+    hoge
   }
 `;

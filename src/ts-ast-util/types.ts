@@ -1,4 +1,4 @@
-import ts from 'typescript';
+import type ts from 'typescript';
 
 /**
  *
@@ -120,6 +120,22 @@ export type ComputePosition = (innerPosition: number) => {
   isInOtherExpression?: boolean;
 };
 
+export type TagConfig =
+  | undefined
+  | string
+  | string[]
+  | {
+      name?: string | string[];
+      ignoreFunctionCallExpression?: boolean;
+    };
+
+export type StrictTagCondition = {
+  names: string[];
+  allowNotTaggedTemplate: boolean;
+  allowTaggedTemplateExpression: boolean;
+  allowFunctionCallExpression: boolean;
+};
+
 /**
  *
  * Serves the following information.
@@ -132,8 +148,14 @@ export interface ResolvedTemplateInfo {
   combinedText: string;
   getInnerPosition: ComputePosition;
   getSourcePosition: ComputePosition;
-  convertInnerPosition2InnerLocation: (pos: number) => { line: number; character: number };
-  convertInnerLocation2InnerPosition: (location: { line: number; character: number }) => number;
+  convertInnerPosition2InnerLocation: (
+    pos: number,
+    throwErrorIfOutOfRange?: boolean,
+  ) => { line: number; character: number };
+  convertInnerLocation2InnerPosition: (
+    location: { line: number; character: number },
+    throwErrorIfOutOfRange?: boolean,
+  ) => number;
 }
 
 export interface ResolveErrorInfo {
@@ -148,9 +170,10 @@ export interface ResolveResult {
 }
 
 export interface ScriptSourceHelper {
-  getAllNodes: (fileName: string, condition: (n: ts.Node) => boolean) => ts.Node[];
+  getAllNodes: <S extends ts.Node>(fileName: string, condition: (n: ts.Node) => undefined | boolean | S) => S[];
   getNode: (fileName: string, position: number) => ts.Node | undefined;
   getLineAndChar: (fileName: string, position: number) => ts.LineAndCharacter;
+  isExcluded: (fileName: string) => boolean;
   resolveTemplateLiteral: (
     fileName: string,
     node: ts.NoSubstitutionTemplateLiteral | ts.TemplateExpression,

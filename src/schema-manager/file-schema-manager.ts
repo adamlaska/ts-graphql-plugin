@@ -1,9 +1,10 @@
-import path from 'path';
-import ts from 'typescript/lib/tsserverlibrary';
+import path from 'node:path';
 import { buildSchema, buildClientSchema } from 'graphql';
 
+import type ts from '../tsmodule';
+
 import { SchemaManager } from './schema-manager';
-import { SchemaManagerHost } from './types';
+import type { SchemaManagerHost } from './types';
 
 function extractIntrospectionContentFromJson(jsonObject: any) {
   if (jsonObject.data) {
@@ -21,7 +22,10 @@ export class FileSchemaManager extends SchemaManager {
   private _schemaPath: string;
   private _watcher?: ts.FileWatcher;
 
-  constructor(protected _host: SchemaManagerHost, options: FileSchemaManagerOptions) {
+  constructor(
+    protected _host: SchemaManagerHost,
+    options: FileSchemaManagerOptions,
+  ) {
     super(_host);
     this._schemaPath = options.path;
   }

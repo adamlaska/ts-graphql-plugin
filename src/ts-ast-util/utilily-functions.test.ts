@@ -1,43 +1,76 @@
 import ts from 'typescript';
 import {
   findAllNodes,
-  findNode,
-  isTagged,
+  getSanitizedTemplateText,
   isImportDeclarationWithCondition,
   mergeImportDeclarationsWithSameModules,
   removeAliasFromImportDeclaration,
 } from './utilily-functions';
 import { printNode } from './testing/print-node';
 
-describe(isTagged, () => {
-  it('should return true when the tag condition is matched', () => {
-    // prettier-ignore
-    const text = 'function myTag(...args: any[]) { return "" }' + '\n'
-             + 'const x = myTag`query { }`';
-    const s = ts.createSourceFile('input.ts', text, ts.ScriptTarget.Latest, true);
-    const node = findNode(s, text.length - 3) as ts.Node;
-    expect(isTagged(node, 'myTag')).toBeTruthy();
-  });
-
-  it('should return true when the tag condition is not matched', () => {
-    // prettier-ignore
-    const text = 'function myTag(...args: any[]) { return "" }' + '\n'
-             + 'const x = myTag`query { }`';
-    const s = ts.createSourceFile('input.ts', text, ts.ScriptTarget.Latest, true);
-    const node = findNode(s, text.length - 3) as ts.Node;
-    expect(isTagged(node, 'MyTag')).toBeFalsy();
-  });
-});
-
 describe(findAllNodes, () => {
-  it('findAllNodes should return nodes which match given condition', () => {
+  it('should return nodes which match given condition', () => {
     // prettier-ignore
     const text = 'const a = `AAA`;' + '\n'
-             + 'const b = `BBB`;';
+               + 'const b = `BBB`;';
     const s = ts.createSourceFile('input.ts', text, ts.ScriptTarget.Latest, true);
     const actual = findAllNodes(s, node => node.kind === ts.SyntaxKind.NoSubstitutionTemplateLiteral);
     expect(actual.length).toBe(2);
     expect(actual.map(n => n.getText())).toEqual(['`AAA`', '`BBB`']);
+  });
+
+  it('should accepts callback which returns ts.Node', () => {
+    const text = `
+      const a = fn(\`AAA\`);
+      const b = fn('BBB');
+    `;
+    const s = ts.createSourceFile('input.ts', text, ts.ScriptTarget.Latest);
+    const actual = findAllNodes(s, node => (ts.isCallExpression(node) ? node.arguments[0] : undefined));
+    expect(actual.length).toBe(2);
+    expect(ts.isNoSubstitutionTemplateLiteral(actual[0])).toBeTruthy();
+    expect(ts.isStringLiteral(actual[1])).toBeTruthy();
+  });
+});
+
+describe(getSanitizedTemplateText, () => {
+  describe('when node was parsed with parent', () => {
+    it('should return rawText for NoSubstitutionTemplateLiteral node', () => {
+      const text = 'const a = `abc`;';
+      const s = ts.createSourceFile('input.ts', text, ts.ScriptTarget.Latest, true);
+      const [found] = findAllNodes(s, node => ts.isNoSubstitutionTemplateLiteral(node) && node);
+      const actual = getSanitizedTemplateText(found);
+      expect(actual.text).toBe('abc');
+      expect(actual.sourcePosition).toBe(text.indexOf('abc'));
+    });
+
+    it('should replace variable placeholders in TemplateExpression node', () => {
+      const text = 'const a = `abc${hoge}def`;';
+      const s = ts.createSourceFile('input.ts', text, ts.ScriptTarget.Latest, true);
+      const [found] = findAllNodes(s, node => ts.isTemplateExpression(node) && node);
+      const actual = getSanitizedTemplateText(found);
+      expect(actual.text).toBe('abc       def');
+      expect(actual.sourcePosition).toBe(text.indexOf('abc'));
+    });
+  });
+
+  describe('when node was parsed without parent', () => {
+    it('should return rawText for NoSubstitutionTemplateLiteral node', () => {
+      const text = 'const a = `abc`;';
+      const s = ts.createSourceFile('input.ts', text, ts.ScriptTarget.Latest, false);
+      const [found] = findAllNodes(s, node => ts.isNoSubstitutionTemplateLiteral(node) && node);
+      const actual = getSanitizedTemplateText(found, s);
+      expect(actual.text).toBe('abc');
+      expect(actual.sourcePosition).toBe(text.indexOf('abc'));
+    });
+
+    it('should replace variable placeholders in TemplateExpression node', () => {
+      const text = 'const a = `abc${hoge}def`;';
+      const s = ts.createSourceFile('input.ts', text, ts.ScriptTarget.Latest, false);
+      const [found] = findAllNodes(s, node => ts.isTemplateExpression(node) && node);
+      const actual = getSanitizedTemplateText(found, s);
+      expect(actual.text).toBe('abc       def');
+      expect(actual.sourcePosition).toBe(text.indexOf('abc'));
+    });
   });
 });
 
@@ -276,9 +309,9 @@ describe(removeAliasFromImportDeclaration, () => {
   function remove(text: string, name: string) {
     const inputSource = ts.createSourceFile('input.ts', text, ts.ScriptTarget.Latest);
     const statements = inputSource.statements as ts.NodeArray<ts.ImportDeclaration>;
-    const out = removeAliasFromImportDeclaration(statements[0], name);
+    const out = removeAliasFromImportDeclaration(statements[0], [name]);
     if (!out) return undefined;
-    return printNode(removeAliasFromImportDeclaration(statements[0], name)).trim();
+    return printNode(removeAliasFromImportDeclaration(statements[0], [name])).trim();
   }
 
   it('should return base statement when name does not match', () => {

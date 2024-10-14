@@ -1,8 +1,8 @@
 import ts from 'typescript';
-import { mark, Frets } from 'fretted-strings';
+import { GraphQLSchema } from 'graphql';
+import extract from 'fretted-strings';
 import { createSimpleSchema } from './testing/simple-schema';
 import { AdapterFixture } from './testing/adapter-fixture';
-import { GraphQLSchema } from 'graphql';
 
 function delegateFn(): ts.QuickInfo {
   return {
@@ -19,12 +19,12 @@ function delegateFn(): ts.QuickInfo {
 function createFixture(name: string, schema?: GraphQLSchema) {
   return new AdapterFixture(name, schema);
 }
+
 describe('getQuickInfoAtPosition', () => {
   it('should return GraphQL quick info', () => {
     const fixture = createFixture('main.ts', createSimpleSchema());
     const quickInfoFn = fixture.adapter.getQuickInfoAtPosition.bind(fixture.adapter, delegateFn, 'main.ts');
-    const frets: Frets = {};
-    fixture.source = mark(
+    const [content, frets] = extract(
       `
         const query = \`
           query {
@@ -34,8 +34,8 @@ describe('getQuickInfoAtPosition', () => {
           }
         \`;
     `,
-      frets,
     );
+    fixture.source = content;
     expect(quickInfoFn(frets.a1.pos - 1)!.displayParts).toEqual([]);
     expect(
       quickInfoFn(frets.a1.pos)!

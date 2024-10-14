@@ -1,8 +1,8 @@
-import * as ts from 'typescript/lib/tsserverlibrary';
+import ts from 'typescript';
+import { GraphQLSchema } from 'graphql';
+import extract from 'fretted-strings';
 import { AdapterFixture } from './testing/adapter-fixture';
 import { createSimpleSchema } from './testing/simple-schema';
-import { GraphQLSchema } from 'graphql';
-import { mark, Frets } from 'fretted-strings';
 import { ERROR_CODES } from '../errors';
 
 function craeteFixture(name: string, schema?: GraphQLSchema) {
@@ -54,12 +54,23 @@ describe('getSemanticDiagnostics', () => {
     expect(validateFn()).toEqual([]);
   });
 
-  it('should return syntax error with empty template literal', () => {
+  it('should not report for empty template literal', () => {
     const fixture = craeteFixture('input.ts', createSimpleSchema());
     const validateFn = fixture.adapter.getSemanticDiagnostics.bind(fixture.adapter, delegateFn, 'input.ts');
 
     fixture.source = `
       const query = \`\`;
+    `;
+    const actual = validateFn();
+    expect(actual.length).toBe(0);
+  });
+
+  it('should return syntax error if template literal is not valid GraphQL syntax', () => {
+    const fixture = craeteFixture('input.ts', createSimpleSchema());
+    const validateFn = fixture.adapter.getSemanticDiagnostics.bind(fixture.adapter, delegateFn, 'input.ts');
+
+    fixture.source = `
+      const query = \`query {\`;
     `;
     const actual = validateFn();
     expect(actual.length).toBe(1);
@@ -70,15 +81,14 @@ describe('getSemanticDiagnostics', () => {
     const fixture = craeteFixture('input.ts', createSimpleSchema());
     const validateFn = fixture.adapter.getSemanticDiagnostics.bind(fixture.adapter, delegateFn, 'input.ts');
 
-    const frets: Frets = {};
-
-    fixture.source = mark(
+    const [content, frets] = extract(
       // prettier-ignore
       '    const query = `query {`;    ' + '\n' +
       '%%%                      ^   %%%' + '\n' +
       '%%%                      a1  %%%' + '\n',
-      frets,
     );
+
+    fixture.source = content;
     const actual = validateFn();
     expect(actual[0].start).toBe(frets.a1.pos);
   });
@@ -136,12 +146,115 @@ describe('getSemanticDiagnostics', () => {
     expect(validateFn().length).toBe(1);
   });
 
+  it('should exclude fragment definition itself as external fragments', () => {
+    const fixture = craeteFixture('input.ts', createSimpleSchema());
+    const validateFn = fixture.adapter.getSemanticDiagnostics.bind(fixture.adapter, delegateFn, 'input.ts');
+
+    fixture.source = `
+      const fragment = \`
+        fragment MyFragment on Query {
+          hello
+        }
+      \`;
+    `;
+    const actual = validateFn();
+    expect(actual.length).toBe(0);
+  });
+
+  it('should work with external fragments', () => {
+    const fixture = craeteFixture('input.ts', createSimpleSchema());
+    const validateFn = fixture.adapter.getSemanticDiagnostics.bind(fixture.adapter, delegateFn, 'input.ts');
+
+    fixture
+      .registerFragment(
+        'fragment1.ts',
+        `
+          fragment ExternalFragment1 on Query {
+            __typename
+          }
+        `,
+      )
+      .registerFragment(
+        'fragment2.ts',
+        `
+          fragment ExternalFragment2 on Query {
+            __typename
+          }
+        `,
+      ).source = `
+        const fragment = \`
+          fragment MyFragment on Query {
+            hello
+            ...ExternalFragment1
+          }
+        \`;
+      `;
+    const actual = validateFn();
+    expect(actual.length).toBe(0);
+  });
+
+  it('should not report error if non-dependent fragment has error', () => {
+    const fixture = craeteFixture('input.ts', createSimpleSchema());
+    const validateFn = fixture.adapter.getSemanticDiagnostics.bind(fixture.adapter, delegateFn, 'input.ts');
+
+    fixture
+      .registerFragment(
+        'fragment1.ts',
+        `
+          fragment DependentFragment on Query {
+            __typename
+          }
+        `,
+      )
+      .registerFragment(
+        'fragment2.ts',
+        `
+          fragment NonDependentFragment on Query {
+            __typename
+            notExistingFeild
+          }
+        `,
+      ).source = `
+        const fragment = \`
+          fragment MyFragment on Query {
+            hello
+            ...DependentFragment
+          }
+        \`;
+      `;
+    const actual = validateFn();
+    expect(actual.length).toBe(0);
+  });
+
+  it('should not report error even if dependent fragment has error', () => {
+    const fixture = craeteFixture('input.ts', createSimpleSchema());
+    const validateFn = fixture.adapter.getSemanticDiagnostics.bind(fixture.adapter, delegateFn, 'input.ts');
+
+    fixture.registerFragment(
+      'fragment1.ts',
+      `
+        fragment DependentFragment on Query {
+          __typename
+          notExistingFeild
+        }
+      `,
+    ).source = `
+        const fragment = \`
+          fragment MyFragment on Query {
+            hello
+            ...DependentFragment
+          }
+        \`;
+      `;
+    const actual = validateFn();
+    expect(actual.length).toBe(0);
+  });
+
   it('should return "templateIsTooComplex" error when template node has too complex interpolation', () => {
     const fixture = craeteFixture('input.ts', createSimpleSchema());
     const validateFn = fixture.adapter.getSemanticDiagnostics.bind(fixture.adapter, delegateFn, 'input.ts');
 
-    const frets: Frets = {};
-    fixture.source = mark(
+    const [content, frets] = extract(
       `
       const query = \`
         \${someFn()}
@@ -152,8 +265,8 @@ describe('getSemanticDiagnostics', () => {
         }
       \`;
     `,
-      frets,
     );
+    fixture.source = content;
     const actual = validateFn();
     expect(actual[0].code).toBe(ERROR_CODES.templateIsTooComplex.code);
     expect(actual[0].start).toBe(frets.a1.pos);
@@ -163,8 +276,7 @@ describe('getSemanticDiagnostics', () => {
     const fixture = craeteFixture('input.ts', createSimpleSchema());
     const validateFn = fixture.adapter.getSemanticDiagnostics.bind(fixture.adapter, delegateFn, 'input.ts');
 
-    const frets: Frets = {};
-    fixture.source = mark(
+    const [content, frets] = extract(
       `
       const fragment = \`
         fragment MyFragment on Query {
@@ -180,11 +292,43 @@ describe('getSemanticDiagnostics', () => {
         }
       \`;
     `,
-      frets,
     );
+    fixture.source = content;
     const actual = validateFn();
     expect(actual.length).toBe(2);
     expect(actual[1].code).toBe(ERROR_CODES.errorInOtherInterpolation.code);
     expect(actual[1].start).toBe(frets.a1.pos);
+  });
+
+  it('should return "duplicatedFragmentDefinitions" error when interpolated fragment has error', () => {
+    const fixture = craeteFixture('input.ts', createSimpleSchema());
+    const validateFn = fixture.adapter.getSemanticDiagnostics.bind(fixture.adapter, delegateFn, 'input.ts');
+
+    fixture.registerFragment(
+      'fragments.ts',
+      `
+        fragment MyFragment on Query {
+          __typename
+        }
+      `,
+    );
+
+    const [content, frets] = extract(
+      `
+        const fragment = \`
+          fragment MyFragment on Query {
+   %%%             ^         ^            %%%
+   %%%             a1        a2           %%%
+            __typename
+          }
+        \`;
+      `,
+    );
+    fixture.source = content;
+    const actual = validateFn();
+    expect(actual.length).toBe(1);
+    expect(actual[0].code).toBe(ERROR_CODES.duplicatedFragmentDefinitions.code);
+    expect(actual[0].start).toBe(frets.a1.pos);
+    expect(actual[0].length).toBe(frets.a2.pos - frets.a1.pos);
   });
 });

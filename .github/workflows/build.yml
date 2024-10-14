@@ -12,29 +12,35 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: [18.x]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      - name: npm install, build, and test
+          cache: npm
+      - name: Install dependencies
         run: |
-          yarn --frozen-lockfile
-          yarn compile
-          yarn link
-          yarn link ts-graphql-plugin
-          yarn test
+          npm ci
+      - name: Build
+        run: |
+          npm run build
+          git diff --name-only --exit-code
+      - name: Test
+        run: |
+          npm link
+          npm link ts-graphql-plugin
+          npm test
         env:
           CI: true
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         with:
           name: jest
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/coverage-final.json
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         with:
           name: e2e
           token: ${{ secrets.CODECOV_TOKEN }}

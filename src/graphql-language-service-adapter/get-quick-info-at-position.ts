@@ -1,6 +1,7 @@
-import ts from 'typescript';
-import { getHoverInformation } from 'graphql-language-service-interface';
-import { AnalysisContext, GetQuickInfoAtPosition } from './types';
+import { getHoverInformation } from 'graphql-language-service';
+
+import ts from '../tsmodule';
+import type { AnalysisContext, GetQuickInfoAtPosition } from './types';
 import { SimplePosition } from './simple-position';
 
 export function getQuickInfoAtPosition(
@@ -9,9 +10,10 @@ export function getQuickInfoAtPosition(
   fileName: string,
   position: number,
 ) {
+  if (ctx.getScriptSourceHelper().isExcluded(fileName)) return delegate(fileName, position);
   const schema = ctx.getSchema();
   if (!schema) return delegate(fileName, position);
-  const node = ctx.findTemplateNode(fileName, position);
+  const node = ctx.findAscendantTemplateNode(fileName, position);
   if (!node) return delegate(fileName, position);
   const { resolvedInfo } = ctx.resolveTemplateInfo(fileName, node);
   if (!resolvedInfo) return delegate(fileName, position);

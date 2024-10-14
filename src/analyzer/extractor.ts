@@ -1,14 +1,35 @@
-import ts from 'typescript';
-import { parse, print, DocumentNode, GraphQLError } from 'graphql';
-import { visit } from 'graphql/language';
-import { isTagged, ScriptSourceHelper, ResolvedTemplateInfo } from '../ts-ast-util';
-import { ManifestOutput, ManifestDocumentEntry, OperationType } from './types';
+import type ts from '../tsmodule';
+import {
+  parse,
+  visit,
+  print,
+  GraphQLError,
+  Kind,
+  type ASTNode,
+  type DocumentNode,
+  type FragmentDefinitionNode,
+} from 'graphql';
+import { getFragmentDependenciesForAST } from 'graphql-language-service';
+import {
+  getTemplateNodeUnder,
+  getTagName,
+  ScriptSourceHelper,
+  ResolvedTemplateInfo,
+  StrictTagCondition,
+} from '../ts-ast-util';
+import type { ManifestOutput, ManifestDocumentEntry, OperationType } from './types';
 import { ErrorWithLocation, ERROR_CODES } from '../errors';
-import { detectDuplicatedFragments } from '../gql-ast-util';
+import {
+  detectDuplicatedFragments,
+  FragmentRegistry,
+  getFragmentNamesInDocument,
+  cloneFragmentMap,
+} from '../gql-ast-util';
 
 export type ExtractorOptions = {
   removeDuplicatedFragments: boolean;
   scriptSourceHelper: ScriptSourceHelper;
+  fragmentRegistry: FragmentRegistry;
   debug: (msg: string) => void;
 };
 
@@ -45,30 +66,38 @@ export type ExtractSucceededResult = {
   resolveTemplateErrorMessage: undefined;
 };
 
-export type ExtractResult = ExtractTemplateResolveErrorResult | ExtractGraphQLErrorResult | ExtractSucceededResult;
+export type ExtractFileResult = ExtractTemplateResolveErrorResult | ExtractGraphQLErrorResult | ExtractSucceededResult;
+
+export type ExtractResult = {
+  fileEntries: ExtractFileResult[];
+  globalFragments: {
+    definitions: FragmentDefinitionNode[];
+    definitionMap: Map<string, FragmentDefinitionNode>;
+    duplicatedDefinitions: Set<string>;
+  };
+};
 
 export class Extractor {
   private readonly _removeDuplicatedFragments: boolean;
   private readonly _helper: ScriptSourceHelper;
+  private readonly _fragmentRegistry: FragmentRegistry;
   private readonly _debug: (msg: string) => void;
 
-  constructor({ debug, removeDuplicatedFragments, scriptSourceHelper }: ExtractorOptions) {
+  constructor({ debug, removeDuplicatedFragments, fragmentRegistry, scriptSourceHelper }: ExtractorOptions) {
     this._removeDuplicatedFragments = removeDuplicatedFragments;
+    this._fragmentRegistry = fragmentRegistry;
     this._helper = scriptSourceHelper;
     this._debug = debug;
   }
 
-  extract(files: string[], tagName?: string): ExtractResult[] {
-    const results: ExtractResult[] = [];
+  extract(files: string[], tag: StrictTagCondition): ExtractResult {
+    const results: ExtractFileResult[] = [];
+    const targetFiles = files.filter(fileName => !this._helper.isExcluded(fileName));
     this._debug('Extract template literals from: ');
-    this._debug(files.map(f => ' ' + f).join(',\n'));
-    files.forEach(fileName => {
-      const nodes = this._helper
-        .getAllNodes(fileName, node => ts.isTemplateExpression(node) || ts.isNoSubstitutionTemplateLiteral(node))
-        .filter(node => (tagName ? isTagged(node, tagName) : true)) as (
-        | ts.TemplateExpression
-        | ts.NoSubstitutionTemplateLiteral
-      )[];
+    this._debug(targetFiles.map(f => ' ' + f).join(',\n'));
+    targetFiles.forEach(fileName => {
+      if (this._helper.isExcluded(fileName)) return;
+      const nodes = this._helper.getAllNodes(fileName, node => getTemplateNodeUnder(node, tag));
       nodes.forEach(node => {
         const { resolvedInfo, resolveErrors } = this._helper.resolveTemplateLiteral(fileName, node);
         if (!resolvedInfo) {
@@ -97,7 +126,7 @@ export class Extractor {
         }
       });
     });
-    return results.map(result => {
+    const fileEntries = results.map(result => {
       if (!result.resolevedTemplateInfo) return result;
       try {
         const rawDocumentNode = parse(result.resolevedTemplateInfo.combinedText);
@@ -129,10 +158,21 @@ export class Extractor {
         }
       }
     });
+
+    const globalDefinitonsWithMap = this._fragmentRegistry.getFragmentDefinitionsWithMap();
+
+    return {
+      fileEntries,
+      globalFragments: {
+        definitions: globalDefinitonsWithMap.definitions,
+        definitionMap: globalDefinitonsWithMap.map,
+        duplicatedDefinitions: this._fragmentRegistry.getDuplicaterdFragmentDefinitions(),
+      },
+    };
   }
 
   pickupErrors(
-    extractResults: ExtractResult[],
+    { fileEntries: extractResults }: ExtractResult,
     { ignoreGraphQLError }: { ignoreGraphQLError: boolean } = { ignoreGraphQLError: false },
   ) {
     const errors: ErrorWithLocation[] = [];
@@ -213,7 +253,42 @@ export class Extractor {
     return { type, operationName, fragmentName: noReferedFragmentNames[noReferedFragmentNames.length - 1] };
   }
 
-  toManifest(extractResults: ExtractResult[], tagName: string = ''): ManifestOutput {
+  inflateDocument(
+    fileEntry: ExtractSucceededResult,
+    { globalFragments }: { globalFragments: { definitionMap: Map<string, FragmentDefinitionNode> } },
+  ) {
+    const externalFragments = getFragmentDependenciesForAST(
+      fileEntry.documentNode,
+      cloneFragmentMap(globalFragments.definitionMap, getFragmentNamesInDocument(fileEntry.documentNode)),
+    );
+    const inflatedDocumentNode: DocumentNode = {
+      kind: Kind.DOCUMENT,
+      definitions: [...fileEntry.documentNode.definitions, ...externalFragments],
+      loc: fileEntry.documentNode.loc,
+    };
+    const additionalDocuments: DocumentNode = {
+      kind: Kind.DOCUMENT,
+      definitions: externalFragments,
+    };
+    const isDefinedExternal = (node: ASTNode) => {
+      let found = false;
+      visit(additionalDocuments, {
+        enter: n => {
+          found = node === n;
+        },
+      });
+      return found;
+    };
+
+    return {
+      inflatedDocumentNode,
+      externalFragments,
+      additionalDocuments,
+      isDefinedExternal,
+    };
+  }
+
+  toManifest({ fileEntries: extractResults, globalFragments }: ExtractResult, tag: StrictTagCondition): ManifestOutput {
     const documents = extractResults
       .filter(r => !!r.documentNode)
       .map(result => {
@@ -224,8 +299,8 @@ export class Extractor {
           type: type || 'other',
           operationName,
           fragmentName,
-          body: print(r.documentNode!),
-          tag: tagName,
+          body: print(this.inflateDocument(r, { globalFragments }).inflatedDocumentNode),
+          tag: getTagName(r.templateNode, tag),
           templateLiteralNodeStart: this._helper.getLineAndChar(r.fileName, r.templateNode.getStart()),
           templateLiteralNodeEnd: this._helper.getLineAndChar(r.fileName, r.templateNode.getEnd()),
           documentStart: this._helper.getLineAndChar(r.fileName, r.templateNode.getStart() + 1),
