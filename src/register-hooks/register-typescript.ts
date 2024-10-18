@@ -1,7 +1,8 @@
-import fs from 'fs';
+import fs from 'node:fs';
+import type { CompilerOptions } from 'typescript';
 
 export function registerTypeScript() {
-  let defaultCompileOptions: ts.CompilerOptions;
+  let defaultCompileOptions: CompilerOptions;
   require.extensions['.ts'] = (module, fileName) => {
     const ts = require('typescript') as typeof import('typescript');
     if (!defaultCompileOptions) {

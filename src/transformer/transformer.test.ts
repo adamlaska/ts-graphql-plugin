@@ -1,6 +1,7 @@
 import ts from 'typescript';
 import { DocumentNode, parse, visit } from 'graphql';
 
+import { parseTagConfig, type TagConfig } from '../ts-ast-util';
 import { getTransformer } from './transformer';
 
 function transformAndPrint({
@@ -12,7 +13,7 @@ function transformAndPrint({
   documentTransformers = [],
   enabled = true,
 }: {
-  tag?: string;
+  tag?: TagConfig;
   target: 'text' | 'object';
   docContent: string;
   tsContent: string;
@@ -23,7 +24,7 @@ function transformAndPrint({
   const getDocumentNode = () => parse(docContent);
   const source = ts.createSourceFile('main.ts', tsContent, ts.ScriptTarget.Latest, true);
   const transformer = getTransformer({
-    tag,
+    tag: parseTagConfig(tag),
     target,
     getDocumentNode,
     removeFragmentDefinitions,
@@ -40,7 +41,7 @@ describe('transformer', () => {
       expect(
         transformAndPrint({
           tsContent: `
-          const query = hoge\`abc\`;
+          const query = gql\`abc\`;
         `,
           docContent: `
           query {
@@ -56,7 +57,7 @@ describe('transformer', () => {
       expect(
         transformAndPrint({
           tsContent: `
-          const query = \`abc\`;
+          const query = gql\`abc\`;
         `,
           docContent: `
           query {
@@ -72,7 +73,7 @@ describe('transformer', () => {
       expect(
         transformAndPrint({
           tsContent: `
-          const query = \`abc\${def}\`;
+          const query = gql\`abc\${def}\`;
         `,
           docContent: `
           query {
@@ -152,11 +153,79 @@ describe('transformer', () => {
       ).toMatchSnapshot();
     });
 
+    it('should transform first template argument in CallExpression when the node matches tag name', () => {
+      expect(
+        transformAndPrint({
+          tsContent: `
+          const query = hoge(\`abc\`);
+        `,
+          tag: { name: 'hoge', ignoreFunctionCallExpression: false },
+          docContent: `
+          query {
+            hello
+          }
+        `,
+          target: 'object',
+        }),
+      ).toMatchSnapshot();
+    });
+
+    it('should transform first template expression argument in CallExpression when the node matches tag name', () => {
+      expect(
+        transformAndPrint({
+          tsContent: `
+          const query = hoge(\`abc\${def}\`);
+        `,
+          tag: { name: 'hoge', ignoreFunctionCallExpression: false },
+          docContent: `
+          query {
+            hello
+          }
+        `,
+          target: 'object',
+        }),
+      ).toMatchSnapshot();
+    });
+
+    it('should ignore template argument in CallExpression when the node does not matche tag name', () => {
+      expect(
+        transformAndPrint({
+          tsContent: `
+          const query = hoge(\`abc\`);
+        `,
+          tag: { name: 'foo', ignoreFunctionCallExpression: false },
+          docContent: `
+          query {
+            hello
+          }
+        `,
+          target: 'object',
+        }),
+      ).toMatchSnapshot();
+    });
+
+    it('should ignore arguments which are not template literal in CallExpression node even if the node matches tag name', () => {
+      expect(
+        transformAndPrint({
+          tsContent: `
+          const query = hoge('abc', 100);
+        `,
+          tag: { name: 'hoge', ignoreFunctionCallExpression: false },
+          docContent: `
+          query {
+            hello
+          }
+        `,
+          target: 'object',
+        }),
+      ).toMatchSnapshot();
+    });
+
     it('should transform to 0 literal when removeFragmentDefinitions: true and document has only fragments', () => {
       expect(
         transformAndPrint({
           tsContent: `
-            const fragment = hoge\`abc\`;
+            const fragment = gql\`abc\`;
           `,
           docContent: `
             fragment X on Query {
@@ -173,7 +242,7 @@ describe('transformer', () => {
       expect(
         transformAndPrint({
           tsContent: `
-          const query = hoge\`abc\`;
+          const query = gql\`abc\`;
         `,
           docContent: `
           query MyQuery {
@@ -189,7 +258,7 @@ describe('transformer', () => {
       expect(
         transformAndPrint({
           tsContent: `
-            const fragment = hoge\`abc\`;
+            const fragment = gql\`abc\`;
           `,
           docContent: `
             fragment X on Query {
@@ -206,7 +275,7 @@ describe('transformer', () => {
       expect(
         transformAndPrint({
           tsContent: `
-          const query = hoge\`abc\`;
+          const query = gql\`abc\`;
         `,
           docContent: `
           query MyQuery {

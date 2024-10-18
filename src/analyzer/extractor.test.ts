@@ -1,6 +1,7 @@
 import { print } from 'graphql';
 import { Extractor, ExtractSucceededResult } from './extractor';
 import { createTesintExtractor } from './testing/testing-extractor';
+import { parseTagConfig } from '../ts-ast-util';
 
 describe(Extractor, () => {
   it('should extract GraphQL documents', () => {
@@ -24,8 +25,8 @@ describe(Extractor, () => {
       `,
       },
     ]);
-    const result = extractor.extract(['main.ts'], 'gql');
-    expect(result.map(r => print(r.documentNode!))).toMatchSnapshot();
+    const result = extractor.extract(['main.ts'], parseTagConfig('gql'));
+    expect(result.fileEntries.map(r => print(r.documentNode!))).toMatchSnapshot();
   });
 
   it('should extract GraphQL documents and shrink duplicated fragments when removeDuplicatedFragments: true', () => {
@@ -51,8 +52,8 @@ describe(Extractor, () => {
       ],
       true,
     );
-    const result = extractor.extract(['main.ts'], 'gql');
-    expect(result.map(r => print(r.documentNode!))).toMatchSnapshot();
+    const result = extractor.extract(['main.ts'], parseTagConfig('gql'));
+    expect(result.fileEntries.map(r => print(r.documentNode!))).toMatchSnapshot();
   });
 
   it('should extract GraphQL documents and shrink duplicated fragments when removeDuplicatedFragments: false', () => {
@@ -78,8 +79,8 @@ describe(Extractor, () => {
       ],
       false,
     );
-    const result = extractor.extract(['main.ts'], 'gql');
-    expect(result.map(r => print(r.documentNode!))).toMatchSnapshot();
+    const result = extractor.extract(['main.ts'], parseTagConfig('gql'));
+    expect(result.fileEntries.map(r => print(r.documentNode!))).toMatchSnapshot();
   });
 
   it('should store template resolve errors with too complex interpolation', () => {
@@ -102,10 +103,10 @@ describe(Extractor, () => {
         `,
       },
     ]);
-    const result = extractor.extract(['main.ts'], 'gql');
-    expect(result[0].resolevedTemplateInfo).toBeTruthy();
-    expect(result[1].resolevedTemplateInfo).toBeFalsy();
-    expect(result[1].resolveTemplateError).toMatchSnapshot();
+    const result = extractor.extract(['main.ts'], parseTagConfig('gql'));
+    expect(result.fileEntries[0].resolevedTemplateInfo).toBeTruthy();
+    expect(result.fileEntries[1].resolevedTemplateInfo).toBeFalsy();
+    expect(result.fileEntries[1].resolveTemplateError).toMatchSnapshot();
   });
 
   it('should store GraphQL syntax errors with invalid document', () => {
@@ -121,8 +122,8 @@ describe(Extractor, () => {
       `,
       },
     ]);
-    const result = extractor.extract(['main.ts'], 'gql');
-    expect(result[0].graphqlError).toBeTruthy();
+    const result = extractor.extract(['main.ts'], parseTagConfig('gql'));
+    expect(result.fileEntries[0].graphqlError).toBeTruthy();
   });
 
   it('should convert results to manifest JSON', () => {
@@ -146,8 +147,8 @@ describe(Extractor, () => {
       `,
       },
     ]);
-    const result = extractor.extract(['main.ts'], 'gql');
-    expect(extractor.toManifest(result)).toMatchSnapshot();
+    const result = extractor.extract(['main.ts'], parseTagConfig(''));
+    expect(extractor.toManifest(result, parseTagConfig(''))).toMatchSnapshot();
   });
 
   describe('getDominantDefinition', () => {
@@ -168,8 +169,8 @@ describe(Extractor, () => {
           `,
         },
       ]);
-      const result = extractor.extract(['main.ts'], 'gql') as ExtractSucceededResult[];
-      const { type, operationName } = extractor.getDominantDefinition(result[0]);
+      const result = extractor.extract(['main.ts'], parseTagConfig('gql')) as { fileEntries: ExtractSucceededResult[] };
+      const { type, operationName } = extractor.getDominantDefinition(result.fileEntries[0]);
       expect(type).toBe('query');
       expect(operationName).toBe('MyQuery');
     });
@@ -190,8 +191,8 @@ describe(Extractor, () => {
           `,
         },
       ]);
-      const result = extractor.extract(['main.ts'], 'gql') as ExtractSucceededResult[];
-      const { type, operationName } = extractor.getDominantDefinition(result[0]);
+      const result = extractor.extract(['main.ts'], parseTagConfig('gql')) as { fileEntries: ExtractSucceededResult[] };
+      const { type, operationName } = extractor.getDominantDefinition(result.fileEntries[0]);
       expect(type).toBe('mutation');
       expect(operationName).toBe('MyMutation');
     });
@@ -212,8 +213,8 @@ describe(Extractor, () => {
           `,
         },
       ]);
-      const result = extractor.extract(['main.ts'], 'gql') as ExtractSucceededResult[];
-      const { type, operationName } = extractor.getDominantDefinition(result[0]);
+      const result = extractor.extract(['main.ts'], parseTagConfig('gql')) as { fileEntries: ExtractSucceededResult[] };
+      const { type, operationName } = extractor.getDominantDefinition(result.fileEntries[0]);
       expect(type).toBe('subscription');
       expect(operationName).toBe('MySubscription');
     });
@@ -239,8 +240,8 @@ describe(Extractor, () => {
           `,
         },
       ]);
-      const result = extractor.extract(['main.ts'], 'gql') as ExtractSucceededResult[];
-      const { type, operationName } = extractor.getDominantDefinition(result[0]);
+      const result = extractor.extract(['main.ts'], parseTagConfig('gql')) as { fileEntries: ExtractSucceededResult[] };
+      const { type, operationName } = extractor.getDominantDefinition(result.fileEntries[0]);
       expect(type).toBe('complex');
       expect(operationName).toBe('MULTIPLE_OPERATIONS');
     });
@@ -259,8 +260,8 @@ describe(Extractor, () => {
           `,
         },
       ]);
-      const result = extractor.extract(['main.ts'], 'gql') as ExtractSucceededResult[];
-      const { type, fragmentName } = extractor.getDominantDefinition(result[0]);
+      const result = extractor.extract(['main.ts'], parseTagConfig('gql')) as { fileEntries: ExtractSucceededResult[] };
+      const { type, fragmentName } = extractor.getDominantDefinition(result.fileEntries[0]);
       expect(type).toBe('fragment');
       expect(fragmentName).toBe('MyFragment');
     });
@@ -283,8 +284,8 @@ describe(Extractor, () => {
           `,
         },
       ]);
-      const result = extractor.extract(['main.ts'], 'gql') as ExtractSucceededResult[];
-      const { type, fragmentName } = extractor.getDominantDefinition(result[0]);
+      const result = extractor.extract(['main.ts'], parseTagConfig('gql')) as { fileEntries: ExtractSucceededResult[] };
+      const { type, fragmentName } = extractor.getDominantDefinition(result.fileEntries[0]);
       expect(type).toBe('fragment');
       expect(fragmentName).toBe('MyFragment');
     });
@@ -311,8 +312,8 @@ describe(Extractor, () => {
           `,
         },
       ]);
-      const result = extractor.extract(['main.ts'], 'gql') as ExtractSucceededResult[];
-      const { type, fragmentName } = extractor.getDominantDefinition(result[0]);
+      const result = extractor.extract(['main.ts'], parseTagConfig('gql')) as { fileEntries: ExtractSucceededResult[] };
+      const { type, fragmentName } = extractor.getDominantDefinition(result.fileEntries[0]);
       expect(type).toBe('fragment');
       expect(fragmentName).toBe('MyFragment2');
     });

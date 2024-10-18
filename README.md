@@ -3,18 +3,18 @@
 [![github actions](https://github.com/Quramy/ts-graphql-plugin/workflows/build/badge.svg)](https://github.com/Quramy/ts-graphql-plugin/actions)
 [![codecov](https://codecov.io/gh/Quramy/ts-graphql-plugin/branch/main/graph/badge.svg)](https://codecov.io/gh/Quramy/ts-graphql-plugin)
 [![npm version](https://badge.fury.io/js/ts-graphql-plugin.svg)](https://badge.fury.io/js/ts-graphql-plugin)
-![deps](https://david-dm.org/quramy/ts-graphql-plugin.svg)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/Quramy/ts-graphql-plugin/main/LICENSE.txt)
 
 Provides functions to help TypeScript GraphQL client development including auto completion, query validation, type generation and so on.
 
-![capture](https://raw.githubusercontent.com/Quramy/ts-graphql-plugin/main/capture.gif)
+![VSCode screenshot](https://raw.githubusercontent.com/Quramy/ts-graphql-plugin/main/capture_v4.gif)
 
 This plugin has the following features:
 
 - As TypeScript Language Service extension:
   - Completion suggestion
   - Get GraphQL diagnostics
+  - Go to fragment definition
   - Display GraphQL quick info within tooltip
 - As CLI
   - Generate ts type files from your GraphQL operations in your TypeScript sources
@@ -35,9 +35,10 @@ This plugin has the following features:
 - [Plugin options](#plugin-options)
   - [`schema`](#schema)
   - [`tag`](#tag)
+  - [`exclude`](#exclude)
+  - [`enabledGlobalFragments`](#enabledglobalfragments)
   - [`localSchemaExtensions`](#localschemaextensions)
   - [`typegen.addons`](#typegenaddons)
-  - [`removeDuplicatedFragments`](#removeduplicatedfragments)
 - [Built-in Type Generator Addons](#built-in-type-generator-addons)
   - [`typed-query-document`](#typed-query-document)
 - [webpack custom transformer](#webpack-custom-transformer)
@@ -46,9 +47,8 @@ This plugin has the following features:
   - [Transformer options](#transformer-options)
     - [`removeFragmentDefinitions` optional](#removefragmentdefinitions-optional)
     - [`documentTransformers` optional](#documenttransformers-optional)
-- [Template strings](#template-strings)
 - [Available editors](#available-editors)
-- [GraphQL version compatibility](#graphql-version-compatibility)
+  - [VSCode](#vscode)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -56,7 +56,7 @@ This plugin has the following features:
 
 ## Getting started
 
-First, confirm that your project has typescript(v2.3.x or later) and graphql(v15.x.0 or later).
+First, confirm that your project has TypeScript and graphql(v15.x.0 or later).
 
 To install this plugin, execute the following:
 
@@ -69,13 +69,10 @@ And configure `plugins` section in your tsconfig.json, for example:
 ```json
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es5",
     "plugins": [
       {
         "name": "ts-graphql-plugin",
-        "schema": "path-or-url-to-your-schema.graphql",
-        "tag": "gql"
+        "schema": "path-or-url-to-your-schema.graphql"
       }
     ]
   }
@@ -123,7 +120,7 @@ Pass plugin options to your tsconfig.json to configure this plugin.
         "name": "ts-graphql-plugin",
         /* plugin options */
         "schema": "path-or-url-to-your-schema.graphql",
-        "tag": "gql",
+        "exclude": ["__generated__"],
         ...
       }
     ]
@@ -208,8 +205,6 @@ Example how configuration script may look like:
 
 ```js
 // my-graphql-config.js
-const fetch = require('node-fetch');
-
 module.exports = projectRootPath =>
   new Promise(resolve => {
     fetch('http://localhost/identity-server/connect/token', {
@@ -258,22 +253,131 @@ type SchemaConfig =
 
 ### `tag`
 
-It's optional. When it's set, this plugin works only if the target template string is tagged by a function whose name is equal to this parameter.
-
-If not set, this plugin treats all template strings in your .ts as GraphQL query.
+It's optional and the default value is `["gql", "graphql"]`. This value is used to find template literal strings of GraphQL document in your sources.
 
 For example:
 
-```ts
-import gql from 'graphql-tag';
+```js
+/* tsconfig.json */
 
-// when tag paramter is 'gql'
-const str1 = gql`query { }`; // work
-const str2 = `<div></div>`; // don't work
-const str3 = otherTagFn`foooo`; // don't work
+{
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "ts-graphql-plugin",
+        "tag": "myGraphqlTag"
+      }
+    ]
+  }
+}
 ```
 
-It's useful to write multiple kinds template strings(e.g. one is Angular Component template, another is Apollo GraphQL query).
+```ts
+// Recognized as GraphQL document
+const query1 = myGraphqlTag`
+  query AppQuery {
+    __typename
+  }
+`;
+// Function call expression is also available.
+const query2 = myGraphqlTag(`
+  query AppQuery {
+    __typename
+  }
+`);
+
+// The followings are not recognized as GraphQL document:
+const str3 = `<div></div>`;
+const str4 = otherTagFn`foooo`;
+const otherValue = otherFn(`foooo`);
+```
+
+The `tag` option accepts the following type:
+
+```ts
+type TagConfig =
+  | undefined
+  | string
+  | string[]
+  | {
+      name?: string | string[];
+      ignoreFunctionCallExpression?: boolean;
+    };
+```
+
+> [!NOTE]
+> The `ignoreFunctionCallExpression` key exists only for backward compatibility with old versions. You don't need to explicitly use this.
+
+### `exclude`
+
+It's optional. Specify an array of file or directory names when you want to exclude specific TypeScript sources from the plugin's analysis.
+
+It's useful when other code generator copies your GraphQL document template strings.
+
+```js
+/* tsconfig.json */
+
+{
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "ts-graphql-plugin",
+        "exclude": [
+          "src/gql", // Ignore source files under `gql` directory
+          "**/*.test.tsx" // Ignore test files
+        ]
+      }
+    ]
+  }
+}
+```
+
+> [!TIP]
+> Wildcard characters, `*`, `**`, and `?` are available.
+
+> [!NOTE]
+> The plugin processes only TypeScript sources in your project by default. You don't need list default excluded files(e.g. `node_modules`).
+
+### `enabledGlobalFragments`
+
+It's optional and the default value is `true`. If enabled, the plugin automatically searches for and merges the dependent fragments for the target GraphQL operation in the TypeScript project.
+
+```tsx
+/* Post.tsx */
+
+import { graphql } from './gql';
+
+const postFragment = graphql(`
+  fragment PostFragment on Post {
+    id
+    name
+    title
+  }
+`);
+
+/* App.tsx */
+
+const appQuery = graphql(`
+  query AppQuery {
+    posts {
+      id
+      ...PostFragment
+    }
+  }
+`);
+```
+
+In the above example, note that `${postFragment}` is not in the `appQuery` template string literal.
+
+If this option is set `true`, you can go to definition of the fragment from the location where the fragment is used as spread reference.
+
+> [!IMPORTANT]
+> This option does not depend on whether the query and fragment are combined at runtime.
+> Whether or not query and fragment are eventually combined depends on the build toolchain you are using.
+> For example, [graphql-codegen](https://the-guild.dev/graphql/codegen/docs/guides/react-vue#writing-graphql-fragments) and [Gatsby](https://www.gatsbyjs.com/docs/reference/graphql-data-layer/using-graphql-fragments/) have a mechanism for referencing global fragments.
+
+> [!IMPORTANT]
+> Fragments must be given a unique name if this option is enabled.
 
 ### `localSchemaExtensions`
 
@@ -370,31 +474,6 @@ If you learn how to create your Addon, see [type generator customization guide](
 
 ts-graphql-plugin also provides built-in Addons. See also the [Built-in Type Generator Addons](#built-in-type-generator-addons) section.
 
-### `removeDuplicatedFragments`
-
-It's optional and default: `true`. By default, this plugin ignores duplicated fragment definitions such as:
-
-```ts
-const fragment = gql`
-  fragment A on Query {
-    id
-  }
-`;
-
-const query = gql`
-  ${fragment}
-  query MyQuery {
-    ...A
-  }
-  ${fragment}
-  # Duplicated fragment interpolation
-`;
-```
-
-This option affects all editor supporting functions, results of CLI commands and results of transformation.
-
-If you set this option `false`, this plugin passes through query document without removing duplication.
-
 ## Built-in Type Generator Addons
 
 ### `typed-query-document`
@@ -420,7 +499,7 @@ This Addon requires `graphql` v15.4.0 or later. To enable this feature, configur
 }
 ```
 
-When enabled generated files export a type based on [`TypedQueryDocumentNode`](https://github.com/graphql/graphql-js/blob/master/src/utilities/typedQueryDocumentNode.d.ts) from GraphQL. The type extends the standard `DocumentNode` AST type but also includes types for result data and variables as type arguments.
+When enabled generated files export a type based on [`TypedQueryDocumentNode`](https://the-guild.dev/blog/typed-document-node) from GraphQL. The type extends the standard `DocumentNode` AST type but also includes types for result data and variables as type arguments.
 
 To use this feature you can apply a type assertion to `gql` template tag expressions that evaluate to a `DocumentNode` value.
 
@@ -495,7 +574,8 @@ module.exports = {
 };
 ```
 
-_NOTE_: For now, this plugin transforms nothing when webpack's `--mode` option is `development` and webpack runs with `--watch` option.
+> [!NOTE]
+> For now, this plugin transforms nothing when webpack's `--mode` option is `development` and webpack runs with `--watch` option.
 
 ### webpack plugin options
 
@@ -530,62 +610,11 @@ const query = gql`
 
 Default: `[]`. You can set an array of GraphQL AST document visitor functions. The visitor functions should be compatible to https://graphql.org/graphql-js/language/#visit .
 
-## Template strings
-
-This tool analyzes template string literals in .ts files such as:
-
-```ts
-const query = gql`
-  query MyQuery = {
-    viewer {
-      id
-      name
-    }
-  }
-`;
-```
-
-_NOTE_
-
-This tool cannot interpret queries containing too complex TypeScript expressions because it statically explores GraphQL queries.
-
-```ts
-/* It's ok */
-
-const fragment = gql`
-  fragment MyFragment on User {
-    id
-    name
-  }
-`;
-
-const query = gql`
-  ${fragment}
-  query MyQuery {
-    viewer {
-      ...MyFragment
-    }
-  }
-`;
-```
-
-```ts
-/* Bad */
-
-const query = gql`
-  query MyQuery {
-    ${someComplexFunction()}
-  }
-`;
-```
-
-Keep your queries static (see also https://blog.apollographql.com/5-benefits-of-static-graphql-queries-b7fa90b0b69a ).
-
 ## Available editors
 
 I've checked the operation with the following editors:
 
-- Visual Studio Code
+- VSCode
 - Vim (with tsuquyomi)
 
 And the following editor have TypeScript plugin with LanguageService so they're compatible with this plugin:
@@ -594,9 +623,18 @@ And the following editor have TypeScript plugin with LanguageService so they're 
 - Sublime text
 - Eclipse
 
-## GraphQL version compatibility
+### VSCode
 
-- If you use `graphql < 15.x`, install `ts-graphql-plugin@^1.x.x`.
+To use TypeScript Language Service Plugin within VSCode, confirm your VSCode uses [workspace version TypeScript](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript).
+
+```js
+/* .vscode/setting.json */
+
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
+}
+```
 
 ## Contributing
 

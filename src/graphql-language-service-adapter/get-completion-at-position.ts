@@ -1,7 +1,6 @@
-import ts from 'typescript';
-import { CompletionItem } from 'graphql-language-service-types';
-import { getAutocompleteSuggestions } from 'graphql-language-service-interface';
-import { AnalysisContext, GetCompletionAtPosition } from './types';
+import type ts from '../tsmodule';
+import { getAutocompleteSuggestions, type CompletionItem } from 'graphql-language-service';
+import type { AnalysisContext, GetCompletionAtPosition } from './types';
 import { SimplePosition } from './simple-position';
 
 function translateCompletionItems(items: CompletionItem[]): ts.CompletionInfo {
@@ -31,9 +30,10 @@ export function getCompletionAtPosition(
   options: ts.GetCompletionsAtPositionOptions | undefined,
   formattingSettings?: ts.FormatCodeSettings | undefined,
 ) {
+  if (ctx.getScriptSourceHelper().isExcluded(fileName)) return delegate(fileName, position, options);
   const schema = ctx.getSchema();
   if (!schema) return delegate(fileName, position, options);
-  const node = ctx.findTemplateNode(fileName, position);
+  const node = ctx.findAscendantTemplateNode(fileName, position);
   if (!node) return delegate(fileName, position, options);
   const { resolvedInfo } = ctx.resolveTemplateInfo(fileName, node);
   if (!resolvedInfo) {
@@ -50,7 +50,13 @@ export function getCompletionAtPosition(
     line: innerLocation.line,
     character: innerLocation.character,
   });
-  const gqlCompletionItems = getAutocompleteSuggestions(schema, combinedText, positionForSeach);
+  const gqlCompletionItems = getAutocompleteSuggestions(
+    schema,
+    combinedText,
+    positionForSeach,
+    undefined,
+    ctx.getGlobalFragmentDefinitions(),
+  );
   ctx.debug(JSON.stringify(gqlCompletionItems));
   return translateCompletionItems(gqlCompletionItems);
 }

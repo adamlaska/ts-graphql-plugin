@@ -1,12 +1,7 @@
-import ts from 'typescript';
+import type ts from 'typescript';
 import {
+  visit,
   GraphQLSchema,
-  DocumentNode,
-  FieldNode,
-  FragmentDefinitionNode,
-  ASTNode,
-  NamedTypeNode,
-  TypeNode,
   GraphQLScalarType,
   GraphQLEnumType,
   GraphQLObjectType,
@@ -19,10 +14,16 @@ import {
   GraphQLInputField,
   GraphQLInputType,
   GraphQLOutputType,
+  type ASTNode,
+  type DocumentNode,
+  type FragmentDefinitionNode,
+  type FieldNode,
+  type NamedTypeNode,
+  type TypeNode,
 } from 'graphql';
-import { visit } from 'graphql/language';
-import { OutputSource } from '../ts-ast-util/types';
-import { StrictAddon } from './addon/types';
+import tsmod from '../tsmodule';
+import { astf, type OutputSource } from '../ts-ast-util';
+import type { StrictAddon } from './addon/types';
 
 class Stack<T> {
   private _array: T[] = [];
@@ -76,7 +77,10 @@ interface FieldTypeElement {
 }
 
 export class TypeGenError extends Error {
-  constructor(public readonly message: string, public readonly node: ASTNode) {
+  constructor(
+    public readonly message: string,
+    public readonly node: ASTNode,
+  ) {
     super(message);
   }
 }
@@ -191,7 +195,7 @@ export class TypeGenVisitor {
                 const declaration = this._createTsTypeDeclaration(tsTypeRefName, variableElementStack.consume(), false);
                 outputSource.pushStatement(declaration);
               }
-              typeNode = ts.createTypeReferenceNode(tsTypeRefName, undefined);
+              typeNode = astf.createTypeReferenceNode(tsTypeRefName, undefined);
             }
             if (!typeNode) {
               throw new Error('Unknown variable input type. ' + variableType.toJSON());
@@ -202,12 +206,11 @@ export class TypeGenVisitor {
             );
             typeNode = tn;
             variableElementStack.current.members.push(
-              ts.createPropertySignature(
+              astf.createPropertySignature(
                 undefined,
                 name,
-                optional || lastStructureKind === 'null' ? ts.createToken(ts.SyntaxKind.QuestionToken) : undefined,
+                optional || lastStructureKind === 'null' ? astf.createToken(tsmod.SyntaxKind.QuestionToken) : undefined,
                 typeNode,
-                undefined,
               ),
             );
           };
@@ -238,7 +241,7 @@ export class TypeGenVisitor {
           );
           resultFieldElementStack.current.typeFragments.push({
             isUnionCondition,
-            typeNode: ts.createTypeReferenceNode(node.name.value, undefined),
+            typeNode: astf.createTypeReferenceNode(node.name.value, undefined),
           });
         },
       },
@@ -312,12 +315,11 @@ export class TypeGenVisitor {
           }
           typeNode = this._wrapTsTypeNodeWithStructualModifiers(typeNode, structureStack).node;
           resultFieldElementStack.current.members.push(
-            ts.createPropertySignature(
+            astf.createPropertySignature(
               undefined,
               node.alias ? node.alias.value : node.name.value,
               undefined,
               typeNode,
-              undefined,
             ),
           );
           fieldMetadataMap.delete(node);
@@ -345,8 +347,8 @@ export class TypeGenVisitor {
       fieldType: fieldType as T extends GraphQLField<any, any>
         ? GraphQLOutputType
         : T extends GraphQLInputField
-        ? GraphQLInputType
-        : never,
+          ? GraphQLInputType
+          : never,
       structureStack,
     };
   }
@@ -384,49 +386,46 @@ export class TypeGenVisitor {
       kind = structureStack.consume();
       node =
         kind === 'null'
-          ? ts.createUnionTypeNode([
+          ? astf.createUnionTypeNode([
               node,
-              ts.createKeywordTypeNode(ts.SyntaxKind.NullKeyword as ts.KeywordTypeSyntaxKind),
+              astf.createKeywordTypeNode(tsmod.SyntaxKind.NullKeyword as ts.KeywordTypeSyntaxKind),
             ])
           : kind === 'list'
-          ? ts.createArrayTypeNode(node)
-          : node;
+            ? astf.createArrayTypeNode(node)
+            : node;
     }
     return { node, lastStructureKind: kind };
   }
 
   private _createTsTypeNodeFromEnum(fieldType: GraphQLEnumType) {
-    return ts.createUnionTypeNode(
-      fieldType.getValues().map(v => ts.createLiteralTypeNode(ts.createStringLiteral(v.value))),
+    return astf.createUnionTypeNode(
+      fieldType.getValues().map(v => astf.createLiteralTypeNode(astf.createStringLiteral(v.value))),
     );
   }
 
   private _createTsDoubleUnderscoreTypenameFieldType(parentType: GraphQLFragmentTypeConditionNamedType) {
     if (parentType instanceof GraphQLObjectType) {
-      return ts.createPropertySignature(
+      return astf.createPropertySignature(
         undefined,
         '__typename',
         undefined,
-        ts.createLiteralTypeNode(ts.createStringLiteral(parentType.name)),
-        undefined,
+        astf.createLiteralTypeNode(astf.createStringLiteral(parentType.name)),
       );
     } else if (parentType instanceof GraphQLUnionType) {
-      return ts.createPropertySignature(
+      return astf.createPropertySignature(
         undefined,
         '__typename',
         undefined,
-        ts.createUnionTypeNode(
-          parentType.getTypes().map(t => ts.createLiteralTypeNode(ts.createStringLiteral(t.name))),
+        astf.createUnionTypeNode(
+          parentType.getTypes().map(t => astf.createLiteralTypeNode(astf.createStringLiteral(t.name))),
         ),
-        undefined,
       );
     } else {
-      return ts.createPropertySignature(
+      return astf.createPropertySignature(
         undefined,
         '__typename',
         undefined,
-        ts.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
-        undefined,
+        astf.createKeywordTypeNode(tsmod.SyntaxKind.StringKeyword),
       );
     }
   }
@@ -436,32 +435,26 @@ export class TypeGenVisitor {
     if (typeNode) return typeNode;
     switch (fieldType.name) {
       case 'Boolean':
-        return ts.createKeywordTypeNode(ts.SyntaxKind.BooleanKeyword);
+        return astf.createKeywordTypeNode(tsmod.SyntaxKind.BooleanKeyword);
       case 'String':
       case 'ID':
-        return ts.createKeywordTypeNode(ts.SyntaxKind.StringKeyword);
+        return astf.createKeywordTypeNode(tsmod.SyntaxKind.StringKeyword);
       case 'Int':
       case 'Float':
-        return ts.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
+        return astf.createKeywordTypeNode(tsmod.SyntaxKind.NumberKeyword);
       default:
-        return ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
+        return astf.createKeywordTypeNode(tsmod.SyntaxKind.AnyKeyword);
     }
   }
 
   private _createTsTypeDeclaration(name: string, fieldTypeElement: FieldTypeElement, shouldExport = true) {
-    const modifiers = shouldExport ? ts.createModifiersFromModifierFlags(ts.ModifierFlags.Export) : undefined;
-    return ts.createTypeAliasDeclaration(
-      undefined,
-      modifiers,
-      name,
-      undefined,
-      this._createTsFieldTypeNode(fieldTypeElement),
-    );
+    const modifiers = shouldExport ? astf.createModifiersFromModifierFlags(tsmod.ModifierFlags.Export) : undefined;
+    return astf.createTypeAliasDeclaration(modifiers, name, undefined, this._createTsFieldTypeNode(fieldTypeElement));
   }
 
   private _createTsFieldTypeNode({ members, typeFragments }: FieldTypeElement) {
     if (!members.length && !typeFragments.length) {
-      return ts.createTypeLiteralNode(undefined);
+      return astf.createTypeLiteralNode(undefined);
     }
     const toUnionElements: ts.TypeNode[] = [];
     const toIntersectionElements: ts.TypeNode[] = [];
@@ -473,11 +466,11 @@ export class TypeGenVisitor {
       }
     });
     if (toUnionElements.length) {
-      toIntersectionElements.push(ts.createUnionTypeNode(toUnionElements));
+      toIntersectionElements.push(astf.createUnionTypeNode(toUnionElements));
     }
     if (members.length) {
-      toIntersectionElements.unshift(ts.createTypeLiteralNode(members));
+      toIntersectionElements.unshift(astf.createTypeLiteralNode(members));
     }
-    return ts.createIntersectionTypeNode(toIntersectionElements);
+    return astf.createIntersectionTypeNode(toIntersectionElements);
   }
 }

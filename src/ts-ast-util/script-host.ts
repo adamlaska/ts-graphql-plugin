@@ -1,10 +1,13 @@
-import ts from 'typescript';
+import ts from '../tsmodule';
 
 export class ScriptHost implements ts.LanguageServiceHost {
   private readonly _fileMap = new Map<string, string | undefined>();
   private readonly _fileVersionMap = new Map<string, number>();
 
-  constructor(private readonly _currentDirectory: string, private readonly _compilerOptions: ts.CompilerOptions) {}
+  constructor(
+    private readonly _currentDirectory: string,
+    private readonly _compilerOptions: ts.CompilerOptions,
+  ) {}
 
   readFile(fileName: string) {
     const hit = this._fileMap.get(fileName);
@@ -46,10 +49,8 @@ export class ScriptHost implements ts.LanguageServiceHost {
     return ts.getDefaultLibFileName(opt);
   }
 
-  // Sinse ts 4.7, imeplement required.
-  // Delegating to `ts.sys.fileExists(path)` is not for me, but I don't know whether the following implementation is correct.
-  fileExists() {
-    return false;
+  fileExists(path: string) {
+    return ts.sys.fileExists(path);
   }
 
   protected _updateFile(fileName: string, content: string | undefined) {

@@ -1,7 +1,7 @@
-import path from 'path';
-import ts from 'typescript';
+import path from 'node:path';
+import ts from '../tsmodule';
 import { Analyzer } from './analyzer';
-import { TsGraphQLPluginConfigOptions } from '../types';
+import type { TsGraphQLPluginConfigOptions } from '../types';
 import { ScriptHost } from '../ts-ast-util';
 import { SchemaManagerFactory, createSchemaManagerHostFromTSGqlPluginConfig } from '../schema-manager';
 import { ErrorWithoutLocation } from '../errors';

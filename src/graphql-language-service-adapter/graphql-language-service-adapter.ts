@@ -1,49 +1,79 @@
-import ts from 'typescript';
-import { GraphQLSchema, parse } from 'graphql';
-import { isTagged, ScriptSourceHelper, TagCondition, isTemplateLiteralTypeNode } from '../ts-ast-util';
-import { SchemaBuildErrorInfo } from '../schema-manager/schema-manager';
-import { detectDuplicatedFragments } from '../gql-ast-util';
-import { AnalysisContext, GetCompletionAtPosition, GetSemanticDiagnostics, GetQuickInfoAtPosition } from './types';
+import { parse, type GraphQLSchema, type DocumentNode } from 'graphql';
+
+import ts from '../tsmodule';
+import {
+  getTemplateNodeUnder,
+  isTaggedTemplateNode,
+  isTemplateLiteralTypeNode,
+  type ScriptSourceHelper,
+  type StrictTagCondition,
+} from '../ts-ast-util';
+import type { SchemaBuildErrorInfo } from '../schema-manager/schema-manager';
+import { getFragmentNamesInDocument, detectDuplicatedFragments, type FragmentRegistry } from '../gql-ast-util';
+import type {
+  AnalysisContext,
+  GetCompletionAtPosition,
+  GetSemanticDiagnostics,
+  GetQuickInfoAtPosition,
+  GetDefinitionAndBoundSpan,
+  GetDefinitionAtPosition,
+} from './types';
 import { getCompletionAtPosition } from './get-completion-at-position';
-import { getSemanticDiagnostics } from './get-semantic-diagonistics';
+import { getSemanticDiagnostics } from './get-semantic-diagnostics';
 import { getQuickInfoAtPosition } from './get-quick-info-at-position';
+import { getDefinitionAtPosition } from './get-definition-at-position';
+import { getDefinitionAndBoundSpan } from './get-definition-and-bound-span';
+import { LRUCache } from '../cache';
 
 export interface GraphQLLanguageServiceAdapterCreateOptions {
   schema?: GraphQLSchema | null;
   schemaErrors?: SchemaBuildErrorInfo[] | null;
   logger?: (msg: string) => void;
-  tag?: string;
+  tag: StrictTagCondition;
   removeDuplicatedFragments: boolean;
+  fragmentRegistry: FragmentRegistry;
 }
-
-type Args<T> = T extends (...args: infer A) => any ? A : never;
 
 export class GraphQLLanguageServiceAdapter {
   private _schemaErrors?: SchemaBuildErrorInfo[] | null;
   private _schema?: GraphQLSchema | null;
-  private readonly _tagCondition?: TagCondition;
+  private readonly _tagCondition: StrictTagCondition;
   private readonly _removeDuplicatedFragments: boolean;
   private readonly _analysisContext: AnalysisContext;
+  private readonly _fragmentRegisry: FragmentRegistry;
+  private readonly _parsedDocumentCache = new LRUCache<string, DocumentNode>(500);
 
-  constructor(private readonly _helper: ScriptSourceHelper, opt: GraphQLLanguageServiceAdapterCreateOptions) {
+  constructor(
+    private readonly _helper: ScriptSourceHelper,
+    opt: GraphQLLanguageServiceAdapterCreateOptions,
+  ) {
     if (opt.logger) this._logger = opt.logger;
     if (opt.schemaErrors) this.updateSchema(opt.schemaErrors, null);
     if (opt.schema) this.updateSchema(null, opt.schema);
-    if (opt.tag) this._tagCondition = opt.tag;
+    this._tagCondition = opt.tag;
     this._removeDuplicatedFragments = opt.removeDuplicatedFragments;
     this._analysisContext = this._createAnalysisContext();
+    this._fragmentRegisry = opt.fragmentRegistry;
   }
 
-  getCompletionAtPosition(delegate: GetCompletionAtPosition, ...args: Args<GetCompletionAtPosition>) {
+  getCompletionAtPosition(delegate: GetCompletionAtPosition, ...args: Parameters<GetCompletionAtPosition>) {
     return getCompletionAtPosition(this._analysisContext, delegate, ...args);
   }
 
-  getSemanticDiagnostics(delegate: GetSemanticDiagnostics, ...args: Args<GetSemanticDiagnostics>) {
+  getSemanticDiagnostics(delegate: GetSemanticDiagnostics, ...args: Parameters<GetSemanticDiagnostics>) {
     return getSemanticDiagnostics(this._analysisContext, delegate, ...args);
   }
 
-  getQuickInfoAtPosition(delegate: GetQuickInfoAtPosition, ...args: Args<GetQuickInfoAtPosition>) {
+  getQuickInfoAtPosition(delegate: GetQuickInfoAtPosition, ...args: Parameters<GetQuickInfoAtPosition>) {
     return getQuickInfoAtPosition(this._analysisContext, delegate, ...args);
+  }
+
+  getDefinitionAndBoundSpan(delegate: GetDefinitionAndBoundSpan, ...args: Parameters<GetDefinitionAndBoundSpan>) {
+    return getDefinitionAndBoundSpan(this._analysisContext, delegate, ...args);
+  }
+
+  getDefinitionAtPosition(delegate: GetDefinitionAtPosition, ...args: Parameters<GetDefinitionAtPosition>) {
+    return getDefinitionAtPosition(this._analysisContext, delegate, ...args);
   }
 
   updateSchema(errors: SchemaBuildErrorInfo[] | null, schema: GraphQLSchema | null) {
@@ -68,64 +98,89 @@ export class GraphQLLanguageServiceAdapter {
           return [this._schema, null];
         }
       },
-      findTemplateNode: (fileName, position) => this._findTemplateNode(fileName, position),
+      getGraphQLDocumentNode: text => this._parse(text),
+      getGlobalFragmentDefinitions: () => this._fragmentRegisry.getFragmentDefinitions(),
+      getGlobalFragmentDefinitionEntry: (name: string) => {
+        const detail = this._fragmentRegisry.getFragmentDefinitionEntryDetail(name);
+        if (!detail) return undefined;
+        const {
+          node,
+          fileName,
+          extra: { sourcePosition },
+        } = detail;
+        return {
+          fileName,
+          node,
+          position: sourcePosition,
+        };
+      },
+      getExternalFragmentDefinitions: (documentStr, fileName, sourcePosition) =>
+        this._fragmentRegisry.getExternalFragments(documentStr, fileName, sourcePosition),
+      getDuplicaterdFragmentDefinitions: () => this._fragmentRegisry.getDuplicaterdFragmentDefinitions(),
+      findAscendantTemplateNode: (fileName, position) => this._findAscendantTemplateNode(fileName, position),
       findTemplateNodes: fileName => this._findTemplateNodes(fileName),
       resolveTemplateInfo: (fileName, node) => this._resolveTemplateInfo(fileName, node),
     };
     return ctx;
   }
 
-  private _findTemplateNode(fileName: string, position: number) {
-    const foundNode = this._helper.getNode(fileName, position);
-    if (!foundNode) return;
-    let node: ts.NoSubstitutionTemplateLiteral | ts.TemplateExpression;
-    if (ts.isNoSubstitutionTemplateLiteral(foundNode)) {
-      node = foundNode;
-    } else if (ts.isTemplateHead(foundNode) && !isTemplateLiteralTypeNode(foundNode.parent)) {
-      node = foundNode.parent;
+  private _findAscendantTemplateNode(fileName: string, position: number) {
+    const nodeUnderCursor = this._helper.getNode(fileName, position);
+    if (!nodeUnderCursor) return;
+
+    let templateNode: ts.NoSubstitutionTemplateLiteral | ts.TemplateExpression;
+
+    if (ts.isNoSubstitutionTemplateLiteral(nodeUnderCursor)) {
+      templateNode = nodeUnderCursor;
+    } else if (ts.isTemplateHead(nodeUnderCursor) && !isTemplateLiteralTypeNode(nodeUnderCursor.parent)) {
+      templateNode = nodeUnderCursor.parent;
     } else if (
-      (ts.isTemplateMiddle(foundNode) || ts.isTemplateTail(foundNode)) &&
-      !isTemplateLiteralTypeNode(foundNode.parent.parent)
+      (ts.isTemplateMiddle(nodeUnderCursor) || ts.isTemplateTail(nodeUnderCursor)) &&
+      !isTemplateLiteralTypeNode(nodeUnderCursor.parent.parent)
     ) {
-      node = foundNode.parent.parent;
+      templateNode = nodeUnderCursor.parent.parent;
     } else {
       return;
     }
-    if (this._tagCondition && !isTagged(node, this._tagCondition)) {
+    if (!isTaggedTemplateNode(templateNode, this._tagCondition)) {
       return;
     }
-    return node;
+    return templateNode;
   }
 
   private _findTemplateNodes(fileName: string) {
-    const allTemplateStringNodes = this._helper.getAllNodes(
-      fileName,
-      (n: ts.Node) => ts.isNoSubstitutionTemplateLiteral(n) || ts.isTemplateExpression(n),
-    );
-    const nodes = allTemplateStringNodes.filter(n => {
-      if (!this._tagCondition) return true;
-      return isTagged(n, this._tagCondition);
-    }) as (ts.NoSubstitutionTemplateLiteral | ts.TemplateExpression)[];
-    return nodes;
+    return this._helper.getAllNodes(fileName, node => getTemplateNodeUnder(node, this._tagCondition));
+  }
+
+  private _parse(text: string) {
+    const cached = this._parsedDocumentCache.get(text);
+    if (cached) return cached;
+    try {
+      const parsed = parse(text);
+      this._parsedDocumentCache.set(text, parsed);
+      return parsed;
+    } catch {
+      return undefined;
+    }
   }
 
   private _resolveTemplateInfo(fileName: string, node: ts.TemplateExpression | ts.NoSubstitutionTemplateLiteral) {
     const { resolvedInfo, resolveErrors } = this._helper.resolveTemplateLiteral(fileName, node);
     if (!resolvedInfo) return { resolveErrors };
-    if (!this._removeDuplicatedFragments) return { resolveErrors, resolvedInfo };
-    try {
-      const documentNode = parse(resolvedInfo.combinedText);
-      const duplicatedFragmentInfoList = detectDuplicatedFragments(documentNode);
-      const info = duplicatedFragmentInfoList.reduce((acc, fragmentInfo) => {
-        return this._helper.updateTemplateLiteralInfo(acc, fragmentInfo);
-      }, resolvedInfo);
-      return { resolvedInfo: info, resolveErrors };
-    } catch (error) {
+    const documentNode = this._parse(resolvedInfo.combinedText);
+    if (!documentNode) {
       // Note:
       // `parse` throws GraphQL syntax error when combinedText is invalid for GraphQL syntax.
       // We don't need handle this error because getDiagnostics method in this class re-checks syntax with graphql-lang-service,
       return { resolvedInfo, resolveErrors };
     }
+    const fragmentNames = getFragmentNamesInDocument(documentNode);
+    if (!this._removeDuplicatedFragments) return { resolveErrors, resolvedInfo, fragmentNames };
+    const duplicatedFragmentInfoList = detectDuplicatedFragments(documentNode);
+    const info = duplicatedFragmentInfoList.reduce((acc, fragmentInfo) => {
+      return this._helper.updateTemplateLiteralInfo(acc, fragmentInfo);
+    }, resolvedInfo);
+    return { resolvedInfo: info, resolveErrors };
   }
 
   private _logger: (msg: string) => void = () => {};

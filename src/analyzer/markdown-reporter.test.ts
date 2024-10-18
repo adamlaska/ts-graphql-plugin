@@ -1,21 +1,10 @@
-import { Extractor } from './extractor';
 import { MarkdownReporter } from './markdown-reporter';
-import { createTestingLanguageServiceAndHost } from '../ts-ast-util/testing/testing-language-service';
-import { createScriptSourceHelper } from '../ts-ast-util/script-source-helper';
-
-function createExtractor(files: { fileName: string; content: string }[]) {
-  const { languageService, languageServiceHost } = createTestingLanguageServiceAndHost({ files });
-  const extractor = new Extractor({
-    removeDuplicatedFragments: true,
-    scriptSourceHelper: createScriptSourceHelper({ languageService, languageServiceHost }),
-    debug: () => {},
-  });
-  return extractor;
-}
+import { createTesintExtractor } from './testing/testing-extractor';
+import { parseTagConfig } from '../ts-ast-util';
 
 describe(MarkdownReporter, () => {
   it('should convert from manifest to markdown content', () => {
-    const extractor = createExtractor([
+    const extractor = createTesintExtractor([
       {
         fileName: '/prj-root/src/main.ts',
         content: `
@@ -41,7 +30,10 @@ describe(MarkdownReporter, () => {
       `,
       },
     ]);
-    const manifest = extractor.toManifest(extractor.extract(['/prj-root/src/main.ts'], 'gql'));
+    const manifest = extractor.toManifest(
+      extractor.extract(['/prj-root/src/main.ts'], parseTagConfig('gql')),
+      parseTagConfig('gql'),
+    );
     const content = new MarkdownReporter().toMarkdownConntent(manifest, {
       baseDir: '/prj-root',
       outputDir: '/prj-root/dist',
@@ -50,7 +42,7 @@ describe(MarkdownReporter, () => {
   });
 
   it('should convert from manifest to markdown content with ignoreFragments: false', () => {
-    const extractor = createExtractor([
+    const extractor = createTesintExtractor([
       {
         fileName: '/prj-root/src/main.ts',
         content: `
@@ -76,7 +68,10 @@ describe(MarkdownReporter, () => {
       `,
       },
     ]);
-    const manifest = extractor.toManifest(extractor.extract(['/prj-root/src/main.ts'], 'gql'));
+    const manifest = extractor.toManifest(
+      extractor.extract(['/prj-root/src/main.ts'], parseTagConfig('gql')),
+      parseTagConfig('gql'),
+    );
     const content = new MarkdownReporter().toMarkdownConntent(manifest, {
       ignoreFragments: false,
       baseDir: '/prj-root',
