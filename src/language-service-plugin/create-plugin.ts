@@ -37,11 +37,16 @@ export function create(info: ts.server.PluginCreateInfo): ts.LanguageService {
       );
     };
 
-    registerDocumentChangeEvent(
-      // Note:
-      // documentRegistry in ts.server.Project is annotated @internal
-      (info.project as any).documentRegistry as ts.DocumentRegistry,
-      {
+    // Note:
+    // documentRegistry is in ts.server.Project or ts.server.ProjectServer but this field is annotated @internal
+    const documentRegistry: ts.DocumentRegistry | undefined =
+      (info.project as any).documentRegistry || (info.project.projectService as any).documentRegistry;
+    if (!documentRegistry) {
+      logger(
+        'Cannot find project.ducumentRegistry nor project.projectService.documentRegistry. Global fragment feature will not work properly.',
+      );
+    } else {
+      registerDocumentChangeEvent(documentRegistry, {
         onAcquire: (fileName, sourceFile, version) => {
           if (!isExcluded(fileName) && info.languageServiceHost.getScriptFileNames().includes(fileName)) {
             handleAcquireOrUpdate(fileName, sourceFile, version);
@@ -56,8 +61,8 @@ export function create(info: ts.server.PluginCreateInfo): ts.LanguageService {
         onRelease: fileName => {
           fragmentRegistry.removeDocument(fileName);
         },
-      },
-    );
+      });
+    }
   }
 
   const scriptSourceHelper = createScriptSourceHelper(info, { exclude: config.exclude });
