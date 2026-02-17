@@ -29,7 +29,7 @@ export class AdapterFixture {
     this._langServiceHost = languageServiceHost;
     this._fragmentRegistry = new FragmentRegistry();
     this.langService = languageService;
-    (this.scriptSourceHelper = createScriptSourceHelper(
+    ((this.scriptSourceHelper = createScriptSourceHelper(
       { languageService, languageServiceHost, project: { getProjectName: () => 'tsconfig.json' } },
       { exclude: [] },
     )),
@@ -43,7 +43,7 @@ export class AdapterFixture {
           allowTaggedTemplateExpression: true,
           allowFunctionCallExpression: true,
         },
-      }));
+      })));
   }
 
   get source() {
