@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`transformer GraphQL document transformation should ignore NoSubstitutionTemplateLiteral when tag is set 1`] = `
 "const query = \`abc\`;

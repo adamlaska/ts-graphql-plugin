@@ -338,7 +338,7 @@ describe(FragmentRegistry, () => {
           { sourcePosition: 0, text: 'fragment FragmentX on Query { ...FragmentA }' },
         ]);
         registry.getExternalFragments('fragment FragmentX on Query { ...FragmentA }', 'main.ts', 0);
-        expect(logger).toBeCalledTimes(0);
+        expect(logger).toHaveBeenCalledTimes(0);
 
         registry.registerDocuments('fragments.ts', '1', [
           {
@@ -354,7 +354,7 @@ describe(FragmentRegistry, () => {
 
         const actual = registry.getExternalFragments('fragment FragmentX on Query { ...FragmentA }', 'main.ts', 0);
 
-        expect(logger).toBeCalledTimes(0);
+        expect(logger).toHaveBeenCalledTimes(0);
         expect(actual.length).toBe(1);
         expect(actual[0].name.value).toBe('FragmentA');
       });
@@ -385,7 +385,7 @@ describe(FragmentRegistry, () => {
         ]);
 
         registry.getExternalFragments('fragment FragmentX on Query { ...FragmentA }', 'main.ts', 0);
-        expect(logger).toBeCalledTimes(0);
+        expect(logger).toHaveBeenCalledTimes(0);
 
         registry.registerDocuments('main.ts', '1', [
           { sourcePosition: 0, text: 'fragment FragmentX on Query { ...FragmentA, ...FragmentB }' },
@@ -397,7 +397,7 @@ describe(FragmentRegistry, () => {
           0,
         );
 
-        expect(logger).toBeCalledTimes(0);
+        expect(logger).toHaveBeenCalledTimes(0);
         expect(actual.length).toBe(2);
       });
 
@@ -419,7 +419,7 @@ describe(FragmentRegistry, () => {
         ]);
 
         registry.getExternalFragments('fragment FragmentX on Query { ...FragmentA }', 'main.ts', 0);
-        expect(logger).toBeCalledTimes(0);
+        expect(logger).toHaveBeenCalledTimes(0);
 
         registry.registerDocuments('main.ts', '1', [
           {
@@ -444,7 +444,7 @@ describe(FragmentRegistry, () => {
           0,
         );
 
-        expect(logger).toBeCalledTimes(0);
+        expect(logger).toHaveBeenCalledTimes(0);
         expect(actual.length).toBe(0);
       });
 
@@ -474,7 +474,7 @@ describe(FragmentRegistry, () => {
         ]);
 
         registry.getExternalFragments('fragment FragmentX on Query { ...FragmentA }', 'main.ts', 0);
-        expect(logger).toBeCalledTimes(0);
+        expect(logger).toHaveBeenCalledTimes(0);
 
         registry.registerDocuments('main.ts', '1', [
           { sourcePosition: 0, text: 'fragment FragmentX on Query { ...FragmentA, __typename }' },
@@ -486,7 +486,7 @@ describe(FragmentRegistry, () => {
           0,
         );
 
-        expect(logger).toBeCalledTimes(1);
+        expect(logger).toHaveBeenCalledTimes(1);
         expect(actual.length).toBe(1);
         expect(actual[0].name.value).toBe('FragmentA');
       });

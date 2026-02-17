@@ -19,7 +19,7 @@ describe(AnalyzerFactory, () => {
     });
 
     it('should throw an error when not exsisting config path', () => {
-      expect(() => new AnalyzerFactory().createAnalyzerFromProjectPath('NOT_EXISTING_PRJ')).toThrowError();
+      expect(() => new AnalyzerFactory().createAnalyzerFromProjectPath('NOT_EXISTING_PRJ')).toThrow();
     });
 
     it('should throw an error when project dir does not have tsconfig.json', () => {
@@ -27,7 +27,7 @@ describe(AnalyzerFactory, () => {
         new AnalyzerFactory().createAnalyzerFromProjectPath(
           path.resolve(__dirname, '../../project-fixtures/no-config-prj'),
         ),
-      ).toThrowError();
+      ).toThrow();
     });
 
     it('should throw an error when config is written in invalid format', () => {
@@ -35,7 +35,7 @@ describe(AnalyzerFactory, () => {
         new AnalyzerFactory().createAnalyzerFromProjectPath(
           path.resolve(__dirname, '../../project-fixtures/simple-prj/tsconfig.invalid.json'),
         ),
-      ).toThrowError();
+      ).toThrow();
     });
 
     it('should throw an error when config has no plugins field', () => {
@@ -43,7 +43,7 @@ describe(AnalyzerFactory, () => {
         new AnalyzerFactory().createAnalyzerFromProjectPath(
           path.resolve(__dirname, '../../project-fixtures/simple-prj/tsconfig.noplugin.json'),
         ),
-      ).toThrowError();
+      ).toThrow();
     });
 
     it('should throw an error when config.plugins has no ts-graphql-plugin object', () => {
@@ -51,7 +51,7 @@ describe(AnalyzerFactory, () => {
         new AnalyzerFactory().createAnalyzerFromProjectPath(
           path.resolve(__dirname, '../../project-fixtures/simple-prj/tsconfig.notsgqlplugin.json'),
         ),
-      ).toThrowError();
+      ).toThrow();
     });
 
     it('should throw an error when config.plugins.typegen.addons includes invalid modules', () => {
@@ -59,7 +59,7 @@ describe(AnalyzerFactory, () => {
         new AnalyzerFactory().createAnalyzerFromProjectPath(
           path.resolve(__dirname, '../../project-fixtures/simple-prj/tsconfig.invalid-addon.json'),
         ),
-      ).toThrowError();
+      ).toThrow();
     });
   });
 });

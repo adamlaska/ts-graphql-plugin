@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`typegen result type generation __typename field should gen __typename type from interface type 1`] = `
 "export type MyQuery = {

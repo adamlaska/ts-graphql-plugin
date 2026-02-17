@@ -33,7 +33,7 @@ describe('typegen', () => {
               }
             `,
         }),
-      ).toThrowError(TypeGenError);
+      ).toThrow(TypeGenError);
     });
 
     it('should gen type from scalar types', () => {
@@ -209,7 +209,7 @@ describe('typegen', () => {
               }
             `,
           }),
-        ).toThrowError(TypeGenError);
+        ).toThrow(TypeGenError);
       });
 
       it('should throw error when reference to Mutation but schema does not have Mutation type', () => {
@@ -226,7 +226,7 @@ describe('typegen', () => {
               }
             `,
           }),
-        ).toThrowError(TypeGenError);
+        ).toThrow(TypeGenError);
       });
 
       it('should throw error when reference to Subscription but schema does not have Subscription type', () => {
@@ -243,7 +243,7 @@ describe('typegen', () => {
               }
             `,
           }),
-        ).toThrowError(TypeGenError);
+        ).toThrow(TypeGenError);
       });
 
       it('should throw error when reference to not existing field', () => {
@@ -260,7 +260,7 @@ describe('typegen', () => {
               }
             `,
           }),
-        ).toThrowError(TypeGenError);
+        ).toThrow(TypeGenError);
       });
 
       it('should gen type from built-in scalar types', () => {
@@ -371,7 +371,7 @@ describe('typegen', () => {
             }
           `,
           }),
-        ).toThrowError(TypeGenError);
+        ).toThrow(TypeGenError);
       });
 
       it('should gen type with correct list/nonNull modifiers', () => {

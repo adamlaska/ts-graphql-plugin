@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`createOutputSource pushDefaultImportIfNeeded should add import specifier if named import statement for same module already exists 1`] = `
 "import Hoge, { Foo } from "./foo";
