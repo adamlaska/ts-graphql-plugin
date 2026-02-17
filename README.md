@@ -89,7 +89,7 @@ $ npx ts-graphql-plugin <command> [options]
 
 If you install this plugin, a short alias `tsgql` is also available instead of `ts-graphql-plugin`.
 
-Available commands are `typegen`, `extract`, `validate` and `report`. If you want more detail, run`ts-graphql-plugin --help`or`ts-graphql-plugin <command> --help` in your console.
+Available commands are `typegen`, `extract`, `validate` and `report`. If you want more detail, run `ts-graphql-plugin --help` or `ts-graphql-plugin <command> --help` in your console.
 
 ### `typegen` command
 
@@ -455,7 +455,7 @@ For example, the following configuration loads `my-addon.ts`, which is an Addon 
 /* my-addon.ts */
 
 import ts from 'typescript';
-import { TypeGenAddonFactory } from 'ts-graphql-plguin';
+import { TypeGenAddonFactory } from 'ts-graphql-plugin';
 
 const addonFactory: TypeGenAddonFactory = () => ({
   customScalar({ scalarType }) {
@@ -628,7 +628,7 @@ And the following editor have TypeScript plugin with LanguageService so they're 
 To use TypeScript Language Service Plugin within VSCode, confirm your VSCode uses [workspace version TypeScript](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript).
 
 ```js
-/* .vscode/setting.json */
+/* .vscode/settings.json */
 
 {
   "typescript.tsdk": "node_modules/typescript/lib",
