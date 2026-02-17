@@ -204,8 +204,8 @@ describe(ScriptedHttpSchemaManager, () => {
     manager._fetchErrorOcurred();
     await manager._getOptions(); // cache should be null, should call _requireScript method again
 
-    expect(manager._requireScript).toBeCalledTimes(2);
-    expect(configScriptMock).toBeCalledTimes(2);
+    expect(manager._requireScript).toHaveBeenCalledTimes(2);
+    expect(configScriptMock).toHaveBeenCalledTimes(2);
   });
 
   it('should reload script and execute it again after configuration script file change', async () => {
@@ -227,7 +227,7 @@ describe(ScriptedHttpSchemaManager, () => {
     manager._configurationScriptChanged();
     await manager._getOptions(); // cache should be null, should call _requireScript method again
 
-    expect(manager._requireScript).toBeCalledTimes(2);
-    expect(configScriptMock).toBeCalledTimes(2);
+    expect(manager._requireScript).toHaveBeenCalledTimes(2);
+    expect(configScriptMock).toHaveBeenCalledTimes(2);
   });
 });

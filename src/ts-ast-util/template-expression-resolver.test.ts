@@ -26,8 +26,8 @@ describe(TemplateExpressionResolver.prototype.resolve, () => {
     const actual = resolver.resolve('main.ts', node as ts.NoSubstitutionTemplateLiteral).resolvedInfo;
     if (!actual) return fail();
     expect(actual.combinedText).toBe('');
-    expect(() => actual.getInnerPosition(0)).toThrowError();
-    expect(() => actual.getInnerPosition(14)).toThrowError();
+    expect(() => actual.getInnerPosition(0)).toThrow();
+    expect(() => actual.getInnerPosition(14)).toThrow();
     expect(actual.getInnerPosition(15)).toStrictEqual({ fileName: 'main.ts', pos: 0 });
     expect(actual.getSourcePosition(0)).toStrictEqual({ fileName: 'main.ts', pos: 15 });
   });
@@ -66,17 +66,17 @@ describe(TemplateExpressionResolver.prototype.resolve, () => {
     );
     expect(actual.combinedText).toBe(expected);
 
-    expect(() => actual.getInnerPosition(frets.a1.pos)).toThrowError();
+    expect(() => actual.getInnerPosition(frets.a1.pos)).toThrow();
     expect(actual.getInnerPosition(frets.a1.pos + 1)).toStrictEqual({ fileName: 'main.ts', pos: 0 });
     expect(actual.getSourcePosition(0)).toStrictEqual({ fileName: 'main.ts', pos: frets.a1.pos + 1 });
 
     expect(actual.getInnerPosition(frets.a2.pos + 1)).toStrictEqual({ fileName: 'main.ts', pos: b2.pos + 1 });
-    expect(() => actual.getInnerPosition(frets.a2.pos + 2)).toThrowError();
+    expect(() => actual.getInnerPosition(frets.a2.pos + 2)).toThrow();
     expect(actual.getSourcePosition(b2.pos + 1)).toStrictEqual({
       fileName: 'main.ts',
       pos: frets.a2.pos + 1,
     });
-    expect(() => actual.getSourcePosition(frets.b2.pos + 2)).toThrowError();
+    expect(() => actual.getSourcePosition(frets.b2.pos + 2)).toThrow();
   });
 
   it('should resolve for closed NoSubstitutionTemplateLiteral node', () => {
@@ -113,17 +113,17 @@ describe(TemplateExpressionResolver.prototype.resolve, () => {
     );
     expect(actual.combinedText).toBe(expectedCombinedText);
 
-    expect(() => actual.getInnerPosition(frets.a1.pos)).toThrowError();
+    expect(() => actual.getInnerPosition(frets.a1.pos)).toThrow();
     expect(actual.getInnerPosition(frets.a1.pos + 1)).toStrictEqual({ fileName: 'main.ts', pos: 0 });
     expect(actual.getSourcePosition(0)).toStrictEqual({ fileName: 'main.ts', pos: frets.a1.pos + 1 });
 
     expect(actual.getInnerPosition(frets.a2.pos + 1)).toStrictEqual({ fileName: 'main.ts', pos: b2.pos + 1 });
-    expect(() => actual.getInnerPosition(frets.a2.pos + 2)).toThrowError();
+    expect(() => actual.getInnerPosition(frets.a2.pos + 2)).toThrow();
     expect(actual.getSourcePosition(b2.pos + 1)).toStrictEqual({
       fileName: 'main.ts',
       pos: frets.a2.pos + 1,
     });
-    expect(() => actual.getSourcePosition(b2.pos + 2)).toThrowError();
+    expect(() => actual.getSourcePosition(b2.pos + 2)).toThrow();
   });
 
   it('should resolve templateExpression spans in no closed TemplateExpression node', () => {
@@ -178,11 +178,11 @@ describe(TemplateExpressionResolver.prototype.resolve, () => {
 
     expect(actual.combinedText).toBe(expectedCombinedText);
 
-    expect(() => actual.getInnerPosition(frets.a1.pos)).toThrowError();
+    expect(() => actual.getInnerPosition(frets.a1.pos)).toThrow();
     expect(actual.getInnerPosition(frets.a1.pos + 1)).toStrictEqual({ fileName: 'main.ts', pos: 0 });
     expect(actual.getSourcePosition(0)).toStrictEqual({ fileName: 'main.ts', pos: frets.a1.pos + 1 });
 
-    expect(() => actual.getInnerPosition(frets.a2.pos)).toThrowError();
+    expect(() => actual.getInnerPosition(frets.a2.pos)).toThrow();
     expect(actual.getInnerPosition(frets.a2.pos + 1)).toStrictEqual({ fileName: 'main.ts', pos: b1.pos + 1 });
     expect(actual.getSourcePosition(b1.pos)).toStrictEqual({
       fileName: 'main.ts',
@@ -194,7 +194,7 @@ describe(TemplateExpressionResolver.prototype.resolve, () => {
       pos: frets.a2.pos + 1,
     });
 
-    expect(() => actual.getInnerPosition(frets.a4.pos)).toThrowError();
+    expect(() => actual.getInnerPosition(frets.a4.pos)).toThrow();
     expect(actual.getInnerPosition(frets.a4.pos + 1)).toStrictEqual({ fileName: 'main.ts', pos: b2.pos + 1 });
     expect(actual.getSourcePosition(b2.pos)).toStrictEqual({
       fileName: 'main.ts',
@@ -259,11 +259,11 @@ describe(TemplateExpressionResolver.prototype.resolve, () => {
 
     expect(actual.combinedText).toBe(expectedCombinedText);
 
-    expect(() => actual.getInnerPosition(frets.a1.pos)).toThrowError();
+    expect(() => actual.getInnerPosition(frets.a1.pos)).toThrow();
     expect(actual.getInnerPosition(frets.a1.pos + 1)).toStrictEqual({ fileName: 'main.ts', pos: 0 });
     expect(actual.getSourcePosition(0)).toStrictEqual({ fileName: 'main.ts', pos: frets.a1.pos + 1 });
 
-    expect(() => actual.getInnerPosition(frets.a2.pos)).toThrowError();
+    expect(() => actual.getInnerPosition(frets.a2.pos)).toThrow();
     expect(actual.getInnerPosition(frets.a2.pos + 1)).toStrictEqual({ fileName: 'main.ts', pos: b1.pos + 1 });
     expect(actual.getSourcePosition(b1.pos)).toStrictEqual({
       fileName: 'main.ts',
@@ -275,7 +275,7 @@ describe(TemplateExpressionResolver.prototype.resolve, () => {
       pos: frets.a2.pos + 1,
     });
 
-    expect(() => actual.getInnerPosition(frets.a4.pos)).toThrowError();
+    expect(() => actual.getInnerPosition(frets.a4.pos)).toThrow();
     expect(actual.getInnerPosition(frets.a4.pos + 1)).toStrictEqual({ fileName: 'main.ts', pos: b2.pos + 1 });
     expect(actual.getSourcePosition(b2.pos)).toStrictEqual({
       fileName: 'main.ts',

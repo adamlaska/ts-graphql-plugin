@@ -23,11 +23,11 @@ def`;
     describe(pos2location, () => {
       const text = 'abcd\nefg';
       it.each([-1, 8])('should throw an error if pos is out of range', pos => {
-        expect(() => pos2location(text, pos, true)).toThrowError();
+        expect(() => pos2location(text, pos, true)).toThrow();
       });
 
       it.each([0, 7])('should not throw an error if pos is invalid', pos => {
-        expect(() => pos2location(text, pos, true)).not.toThrowError();
+        expect(() => pos2location(text, pos, true)).not.toThrow();
       });
     });
 
@@ -41,7 +41,7 @@ def`;
         { line: 1, character: 3 },
         { line: 2, character: 0 },
       ])('should throw an error if location is out of range', location => {
-        expect(() => location2pos(text, location, true)).toThrowError();
+        expect(() => location2pos(text, location, true)).toThrow();
       });
       it.each([
         { line: 0, character: 0 },
@@ -49,7 +49,7 @@ def`;
         { line: 1, character: 0 },
         { line: 1, character: 2 },
       ])('should not throw an error if location is valid range', location => {
-        expect(() => location2pos(text, location, true)).not.toThrowError();
+        expect(() => location2pos(text, location, true)).not.toThrow();
       });
     });
   });
@@ -76,11 +76,11 @@ describe('CRLF', () => {
     describe(pos2location, () => {
       const text = 'abcd\r\nefg';
       it.each([-1, 9])('should throw an error if pos is out of range', pos => {
-        expect(() => pos2location(text, pos, true)).toThrowError();
+        expect(() => pos2location(text, pos, true)).toThrow();
       });
 
       it.each([0, 8])('should not throw an error if pos is invalid', pos => {
-        expect(() => pos2location(text, pos, true)).not.toThrowError();
+        expect(() => pos2location(text, pos, true)).not.toThrow();
       });
     });
 
@@ -94,7 +94,7 @@ describe('CRLF', () => {
         { line: 1, character: 3 },
         { line: 2, character: 0 },
       ])('should throw an error if location is out of range', location => {
-        expect(() => location2pos(text, location, true)).toThrowError();
+        expect(() => location2pos(text, location, true)).toThrow();
       });
       it.each([
         { line: 0, character: 0 },
@@ -102,7 +102,7 @@ describe('CRLF', () => {
         { line: 1, character: 0 },
         { line: 1, character: 2 },
       ])('should not throw an error if location is valid range', location => {
-        expect(() => location2pos(text, location, true)).not.toThrowError();
+        expect(() => location2pos(text, location, true)).not.toThrow();
       });
     });
   });
