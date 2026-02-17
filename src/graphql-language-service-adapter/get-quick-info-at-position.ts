@@ -9,6 +9,7 @@ export function getQuickInfoAtPosition(
   delegate: GetQuickInfoAtPosition,
   fileName: string,
   position: number,
+  _maximumLenghth?: number,
 ) {
   if (ctx.getScriptSourceHelper().isExcluded(fileName)) return delegate(fileName, position);
   const schema = ctx.getSchema();

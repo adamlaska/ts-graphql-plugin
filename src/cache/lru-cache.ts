@@ -7,7 +7,8 @@ export class LRUCache<TKey, TValue> {
     this._cacheMap.set(key, value);
     if (this._cacheMap.size > this._maxSize) {
       const lru = this._cacheMap.keys().next();
-      this._cacheMap.delete(lru.value);
+      const lruKey = lru?.value;
+      if (lruKey) this._cacheMap.delete(lruKey);
     }
   }
 
