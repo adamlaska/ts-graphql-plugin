@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ExtensionManager should parse and extend base schema 1`] = `
+exports[`ExtensionManager > should parse and extend base schema 1`] = `
 "type Query {
   hello: String!
   me: User!
@@ -11,7 +11,7 @@ type User {
 }"
 `;
 
-exports[`ExtensionManager should store parser errors with invalid extension 1`] = `
+exports[`ExtensionManager > should store parser errors with invalid extension 1`] = `
 [
   {
     "fileContent": "extend type NoExisitingType {
@@ -24,7 +24,7 @@ exports[`ExtensionManager should store parser errors with invalid extension 1`] 
 ]
 `;
 
-exports[`ExtensionManager should store parser errors with invalid syntax file 1`] = `
+exports[`ExtensionManager > should store parser errors with invalid syntax file 1`] = `
 [
   {
     "fileContent": "directive @hoge() on FIEELD

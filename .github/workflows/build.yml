@@ -37,7 +37,7 @@ jobs:
           CI: true
       - uses: codecov/codecov-action@v5
         with:
-          name: jest
+          name: vitest
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/coverage-final.json
       - uses: codecov/codecov-action@v5

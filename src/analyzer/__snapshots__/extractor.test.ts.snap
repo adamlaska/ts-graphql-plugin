@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Extractor should convert results to manifest JSON 1`] = `
+exports[`Extractor > should convert results to manifest JSON 1`] = `
 {
   "documents": [
     {
@@ -61,7 +61,7 @@ exports[`Extractor should convert results to manifest JSON 1`] = `
 }
 `;
 
-exports[`Extractor should extract GraphQL documents 1`] = `
+exports[`Extractor > should extract GraphQL documents 1`] = `
 [
   "query MyQuery {
   hello
@@ -74,7 +74,7 @@ exports[`Extractor should extract GraphQL documents 1`] = `
 ]
 `;
 
-exports[`Extractor should extract GraphQL documents and shrink duplicated fragments when removeDuplicatedFragments: false 1`] = `
+exports[`Extractor > should extract GraphQL documents and shrink duplicated fragments when removeDuplicatedFragments: false 1`] = `
 [
   "fragment A on Query {
   hello
@@ -90,7 +90,7 @@ query MyQuery {
 ]
 `;
 
-exports[`Extractor should extract GraphQL documents and shrink duplicated fragments when removeDuplicatedFragments: true 1`] = `
+exports[`Extractor > should extract GraphQL documents and shrink duplicated fragments when removeDuplicatedFragments: true 1`] = `
 [
   "fragment A on Query {
   hello
@@ -102,7 +102,7 @@ query MyQuery {
 ]
 `;
 
-exports[`Extractor should store template resolve errors with too complex interpolation 1`] = `
+exports[`Extractor > should store template resolve errors with too complex interpolation 1`] = `
 {
   "end": 219,
   "message": "This operation or fragment has too complex interpolation to analyze.",

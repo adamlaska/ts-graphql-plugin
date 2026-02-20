@@ -1,3 +1,4 @@
+import { fail } from 'node:assert';
 import { Analyzer } from './analyzer';
 import { createTestingLanguageServiceAndHost } from '../ts-ast-util/testing/testing-language-service';
 import { createTestingSchemaManagerHost } from '../schema-manager/testing/testing-schema-manager-host';

@@ -1,3 +1,4 @@
+import { fail } from 'node:assert';
 import * as ts from 'typescript';
 import extract from 'fretted-strings';
 

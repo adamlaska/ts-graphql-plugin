@@ -6,14 +6,14 @@ describe(AnalyzerFactory, () => {
   describe(AnalyzerFactory.prototype.createAnalyzerFromProjectPath, () => {
     it('should create analyzer instance from existing typescript project directory path', () => {
       const analyzer = new AnalyzerFactory().createAnalyzerFromProjectPath(
-        path.resolve(__dirname, '../../project-fixtures/react-apollo-prj'),
+        path.resolve(__dirname, '../../project-fixtures/simple-prj'),
       );
       expect(analyzer instanceof Analyzer).toBeTruthy();
     });
 
     it('should create analyzer instance from existing typescript project config file name', () => {
       const analyzer = new AnalyzerFactory().createAnalyzerFromProjectPath(
-        path.resolve(__dirname, '../../project-fixtures/react-apollo-prj/tsconfig.json'),
+        path.resolve(__dirname, '../../project-fixtures/simple-prj/tsconfig.json'),
       );
       expect(analyzer instanceof Analyzer).toBeTruthy();
     });

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`typegen result type generation __typename field should gen __typename type from interface type 1`] = `
+exports[`typegen > result type generation > __typename field > should gen __typename type from interface type 1`] = `
 "export type MyQuery = {
     node: {
         __typename: string;
@@ -10,7 +10,7 @@ export type MyQueryVariables = {};
 "
 `;
 
-exports[`typegen result type generation __typename field should gen __typename type from object type 1`] = `
+exports[`typegen > result type generation > __typename field > should gen __typename type from object type 1`] = `
 "export type MyQuery = {
     __typename: "Query";
 };
@@ -18,7 +18,7 @@ export type MyQueryVariables = {};
 "
 `;
 
-exports[`typegen result type generation __typename field should gen __typename type from union type 1`] = `
+exports[`typegen > result type generation > __typename field > should gen __typename type from union type 1`] = `
 "export type MyQuery = {
     item: {
         __typename: "User" | "Page";
@@ -28,14 +28,14 @@ export type MyQueryVariables = {};
 "
 `;
 
-exports[`typegen result type generation definition node pattern should gen type from fragment def 1`] = `
+exports[`typegen > result type generation > definition node pattern > should gen type from fragment def 1`] = `
 "export type MyFragment = {
     hello: string | null;
 };
 "
 `;
 
-exports[`typegen result type generation definition node pattern should gen type from mutation operation def 1`] = `
+exports[`typegen > result type generation > definition node pattern > should gen type from mutation operation def 1`] = `
 "export type MyMutaion = {
     like: string;
 };
@@ -43,7 +43,7 @@ export type MyMutaionVariables = {};
 "
 `;
 
-exports[`typegen result type generation definition node pattern should gen type from query operation def 1`] = `
+exports[`typegen > result type generation > definition node pattern > should gen type from query operation def 1`] = `
 "export type QueryResult = {
     hello: string;
 };
@@ -51,7 +51,7 @@ export type QueryVariables = {};
 "
 `;
 
-exports[`typegen result type generation definition node pattern should gen type from subscription operation def 1`] = `
+exports[`typegen > result type generation > definition node pattern > should gen type from subscription operation def 1`] = `
 "export type MySubscription = {
     issue: string;
 };
@@ -59,7 +59,7 @@ export type MySubscriptionVariables = {};
 "
 `;
 
-exports[`typegen result type generation fragment spread reference should gen type from inline fragment with type condition 1`] = `
+exports[`typegen > result type generation > fragment spread reference > should gen type from inline fragment with type condition 1`] = `
 "export type MyQuery = {
     id: string;
 } & ({
@@ -69,7 +69,7 @@ export type MyQueryVariables = {};
 "
 `;
 
-exports[`typegen result type generation fragment spread reference should gen type from inline fragment without type condition 1`] = `
+exports[`typegen > result type generation > fragment spread reference > should gen type from inline fragment without type condition 1`] = `
 "export type MyQuery = {
     id: string;
     hello: string;
@@ -78,7 +78,7 @@ export type MyQueryVariables = {};
 "
 `;
 
-exports[`typegen result type generation fragment spread reference should gen type reference from fragment spread on field selection 1`] = `
+exports[`typegen > result type generation > fragment spread reference > should gen type reference from fragment spread on field selection 1`] = `
 "export type MyFragment = {
     name: string;
     age: number;
@@ -92,7 +92,7 @@ export type MyQueryVariables = {};
 "
 `;
 
-exports[`typegen result type generation fragment spread reference should gen type reference from fragment spread on fragment def 1`] = `
+exports[`typegen > result type generation > fragment spread reference > should gen type reference from fragment spread on fragment def 1`] = `
 "export type A = {
     name: string;
 };
@@ -102,7 +102,7 @@ export type B = {
 "
 `;
 
-exports[`typegen result type generation fragment spread reference should gen type reference from fragment spread on operation 1`] = `
+exports[`typegen > result type generation > fragment spread reference > should gen type reference from fragment spread on operation 1`] = `
 "export type MyFragment = {
     hello: string;
 };
@@ -113,7 +113,7 @@ export type MyQueryVariables = {};
 "
 `;
 
-exports[`typegen result type generation fragment spread reference should gen union object literal type from inline fragment concrete type condition 1`] = `
+exports[`typegen > result type generation > fragment spread reference > should gen union object literal type from inline fragment concrete type condition 1`] = `
 "export type MyQuery = {
     item: ({
         id: string;
@@ -127,7 +127,7 @@ export type MyQueryVariables = {};
 "
 `;
 
-exports[`typegen result type generation fragment spread reference should gen union of type references from fragment concrete type condition 1`] = `
+exports[`typegen > result type generation > fragment spread reference > should gen union of type references from fragment concrete type condition 1`] = `
 "export type NodeFragment = {
     id: string;
 };
@@ -144,7 +144,7 @@ export type MyQueryVariables = {};
 "
 `;
 
-exports[`typegen result type generation output types pattern should gen type from built-in scalar types 1`] = `
+exports[`typegen > result type generation > output types pattern > should gen type from built-in scalar types 1`] = `
 "export type MyQuery = {
     idField: string;
     stringField: string;
@@ -156,7 +156,7 @@ export type MyQueryVariables = {};
 "
 `;
 
-exports[`typegen result type generation output types pattern should gen type from enum 1`] = `
+exports[`typegen > result type generation > output types pattern > should gen type from enum 1`] = `
 "export type MyQuery = {
     color: ("RED" | "BLUE" | "GREEN") | null;
 };
@@ -164,7 +164,7 @@ export type MyQueryVariables = {};
 "
 `;
 
-exports[`typegen result type generation output types pattern should gen type from interface type 1`] = `
+exports[`typegen > result type generation > output types pattern > should gen type from interface type 1`] = `
 "export type MyQuery = {
     node: {
         id: string;
@@ -174,7 +174,7 @@ export type MyQueryVariables = {};
 "
 `;
 
-exports[`typegen result type generation output types pattern should gen type from object type 1`] = `
+exports[`typegen > result type generation > output types pattern > should gen type from object type 1`] = `
 "export type MyQuery = {
     hello: string;
 };
@@ -182,7 +182,7 @@ export type MyQueryVariables = {};
 "
 `;
 
-exports[`typegen result type generation output types pattern should gen type with correct list/nonNull modifiers 1`] = `
+exports[`typegen > result type generation > output types pattern > should gen type with correct list/nonNull modifiers 1`] = `
 "export type MyQuery = {
     nullableField: string | null;
     strictField: string;
@@ -197,7 +197,7 @@ export type MyQueryVariables = {};
 "
 `;
 
-exports[`typegen result type generation output types pattern should gen type with field alias 1`] = `
+exports[`typegen > result type generation > output types pattern > should gen type with field alias 1`] = `
 "export type MyQuery = {
     greeting: string;
 };
@@ -205,7 +205,7 @@ export type MyQueryVariables = {};
 "
 `;
 
-exports[`typegen variable type generation should gen optional type with default value variable 1`] = `
+exports[`typegen > variable type generation > should gen optional type with default value variable 1`] = `
 "export type MyQuery = {
     hello: string;
 };
@@ -215,7 +215,7 @@ export type MyQueryVariables = {
 "
 `;
 
-exports[`typegen variable type generation should gen type from enum 1`] = `
+exports[`typegen > variable type generation > should gen type from enum 1`] = `
 "export type MyQuery = {
     enumInput: string;
 };
@@ -225,7 +225,7 @@ export type MyQueryVariables = {
 "
 `;
 
-exports[`typegen variable type generation should gen type from input object type 1`] = `
+exports[`typegen > variable type generation > should gen type from input object type 1`] = `
 "type VectorInputType = {
     x: number;
     y: number;
@@ -243,7 +243,7 @@ export type MyQueryVariables = {
 "
 `;
 
-exports[`typegen variable type generation should gen type from scalar types 1`] = `
+exports[`typegen > variable type generation > should gen type from scalar types 1`] = `
 "export type MyQuery = {
     idInput: string;
     strInput: string;
@@ -263,7 +263,7 @@ export type MyQueryVariables = {
 "
 `;
 
-exports[`typegen variable type generation should gen type with correct list/nonNull modifiers 1`] = `
+exports[`typegen > variable type generation > should gen type with correct list/nonNull modifiers 1`] = `
 "export type MyQuery = {
     nullableField: string;
     strictField: string;
@@ -287,7 +287,7 @@ export type MyQueryVariables = {
 "
 `;
 
-exports[`typegen variable type generation should work even if the input types have circular references 1`] = `
+exports[`typegen > variable type generation > should work even if the input types have circular references 1`] = `
 "type UserInputType = {
     posts: PostInputType[];
 };

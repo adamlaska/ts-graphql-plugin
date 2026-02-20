@@ -17,26 +17,26 @@ class TestingScriptSnapshot implements ts.IScriptSnapshot {
 describe(registerDocumentChangeEvent, () => {
   it('should register listener called back on acquireDocument method', () => {
     const docRegistry = ts.createDocumentRegistry();
-    const cb = jest.fn();
+    const cb = vi.fn();
     registerDocumentChangeEvent(docRegistry, {
       onAcquire: cb,
-      onUpdate: jest.fn(),
-      onRelease: jest.fn(),
+      onUpdate: vi.fn(),
+      onRelease: vi.fn(),
     });
     docRegistry.acquireDocument('main.ts', ts.getDefaultCompilerOptions(), new TestingScriptSnapshot(''), 'version');
     expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb.mock.lastCall[0]).toBe('main.ts');
-    expect(ts.isSourceFile(cb.mock.lastCall[1])).toBeTruthy();
-    expect(cb.mock.lastCall[2]).toBe('version');
+    expect(cb.mock.lastCall?.[0]).toBe('main.ts');
+    expect(ts.isSourceFile(cb.mock.lastCall?.[1])).toBeTruthy();
+    expect(cb.mock.lastCall?.[2]).toBe('version');
   });
 
   it('should register listener called back on acquireDocumentWithKey method', () => {
     const docRegistry = ts.createDocumentRegistry();
-    const cb = jest.fn();
+    const cb = vi.fn();
     registerDocumentChangeEvent(docRegistry, {
       onAcquire: cb,
-      onUpdate: jest.fn(),
-      onRelease: jest.fn(),
+      onUpdate: vi.fn(),
+      onRelease: vi.fn(),
     });
     docRegistry.acquireDocumentWithKey(
       'main.ts',
@@ -47,33 +47,33 @@ describe(registerDocumentChangeEvent, () => {
       'version',
     );
     expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb.mock.lastCall[0]).toBe('main.ts');
-    expect(ts.isSourceFile(cb.mock.lastCall[1])).toBeTruthy();
-    expect(cb.mock.lastCall[2]).toBe('version');
+    expect(cb.mock.lastCall?.[0]).toBe('main.ts');
+    expect(ts.isSourceFile(cb.mock.lastCall?.[1])).toBeTruthy();
+    expect(cb.mock.lastCall?.[2]).toBe('version');
   });
 
   it('should register listener called back on updateDocument method', () => {
     const docRegistry = ts.createDocumentRegistry();
-    const cb = jest.fn();
+    const cb = vi.fn();
     registerDocumentChangeEvent(docRegistry, {
-      onAcquire: jest.fn(),
+      onAcquire: vi.fn(),
       onUpdate: cb,
-      onRelease: jest.fn(),
+      onRelease: vi.fn(),
     });
     docRegistry.updateDocument('main.ts', ts.getDefaultCompilerOptions(), new TestingScriptSnapshot(''), 'version');
     expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb.mock.lastCall[0]).toBe('main.ts');
-    expect(ts.isSourceFile(cb.mock.lastCall[1])).toBeTruthy();
-    expect(cb.mock.lastCall[2]).toBe('version');
+    expect(cb.mock.lastCall?.[0]).toBe('main.ts');
+    expect(ts.isSourceFile(cb.mock.lastCall?.[1])).toBeTruthy();
+    expect(cb.mock.lastCall?.[2]).toBe('version');
   });
 
   it('should register listener called back on updateDocumentWithKey method', () => {
     const docRegistry = ts.createDocumentRegistry();
-    const cb = jest.fn();
+    const cb = vi.fn();
     registerDocumentChangeEvent(docRegistry, {
-      onAcquire: jest.fn(),
+      onAcquire: vi.fn(),
       onUpdate: cb,
-      onRelease: jest.fn(),
+      onRelease: vi.fn(),
     });
     docRegistry.updateDocumentWithKey(
       'main.ts',
@@ -84,31 +84,31 @@ describe(registerDocumentChangeEvent, () => {
       'version',
     );
     expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb.mock.lastCall[0]).toBe('main.ts');
-    expect(ts.isSourceFile(cb.mock.lastCall[1])).toBeTruthy();
-    expect(cb.mock.lastCall[2]).toBe('version');
+    expect(cb.mock.lastCall?.[0]).toBe('main.ts');
+    expect(ts.isSourceFile(cb.mock.lastCall?.[1])).toBeTruthy();
+    expect(cb.mock.lastCall?.[2]).toBe('version');
   });
 
   it('should register listener called back on releaseDocument method', () => {
     const docRegistry = ts.createDocumentRegistry();
-    const cb = jest.fn();
+    const cb = vi.fn();
     registerDocumentChangeEvent(docRegistry, {
-      onAcquire: jest.fn(),
-      onUpdate: jest.fn(),
+      onAcquire: vi.fn(),
+      onUpdate: vi.fn(),
       onRelease: cb,
     });
     docRegistry.acquireDocument('main.ts', ts.getDefaultCompilerOptions(), new TestingScriptSnapshot(''), 'version');
     docRegistry.releaseDocument('main.ts', ts.getDefaultCompilerOptions(), ts.ScriptKind.TS, undefined);
     expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb.mock.lastCall[0]).toBe('main.ts');
+    expect(cb.mock.lastCall?.[0]).toBe('main.ts');
   });
 
   it('should register listener called back on releaseDocumentWithKey method', () => {
     const docRegistry = ts.createDocumentRegistry();
-    const cb = jest.fn();
+    const cb = vi.fn();
     registerDocumentChangeEvent(docRegistry, {
-      onAcquire: jest.fn(),
-      onUpdate: jest.fn(),
+      onAcquire: vi.fn(),
+      onUpdate: vi.fn(),
       onRelease: cb,
     });
     docRegistry.acquireDocumentWithKey(
@@ -121,6 +121,6 @@ describe(registerDocumentChangeEvent, () => {
     );
     docRegistry.releaseDocumentWithKey('main.ts' as any, 'key' as any, ts.ScriptKind.TS, undefined);
     expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb.mock.lastCall[0]).toBe('main.ts');
+    expect(cb.mock.lastCall?.[0]).toBe('main.ts');
   });
 });

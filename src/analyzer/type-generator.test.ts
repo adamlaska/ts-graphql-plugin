@@ -1,3 +1,4 @@
+import { fail } from 'node:assert';
 import { buildSchema } from 'graphql';
 import { TypeGenerator } from './type-generator';
 import { createTesintExtractor } from './testing/testing-extractor';

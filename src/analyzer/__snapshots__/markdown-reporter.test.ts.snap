@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`MarkdownReporter should convert from manifest to markdown content 1`] = `
+exports[`MarkdownReporter > should convert from manifest to markdown content 1`] = `
 "# Extracted GraphQL Operations
 ## Queries
 
@@ -36,7 +36,7 @@ From [src/main.ts:14:30](../src/main.ts#L14-L20)
 Extracted by [ts-graphql-plugin](https://github.com/Quramy/ts-graphql-plugin)"
 `;
 
-exports[`MarkdownReporter should convert from manifest to markdown content with ignoreFragments: false 1`] = `
+exports[`MarkdownReporter > should convert from manifest to markdown content with ignoreFragments: false 1`] = `
 "# Extracted GraphQL Operations
 ## Queries
 
