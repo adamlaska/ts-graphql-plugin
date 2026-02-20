@@ -25,9 +25,9 @@ describe(registerDocumentChangeEvent, () => {
     });
     docRegistry.acquireDocument('main.ts', ts.getDefaultCompilerOptions(), new TestingScriptSnapshot(''), 'version');
     expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb.mock.lastCall[0]).toBe('main.ts');
-    expect(ts.isSourceFile(cb.mock.lastCall[1])).toBeTruthy();
-    expect(cb.mock.lastCall[2]).toBe('version');
+    expect(cb.mock.lastCall?.[0]).toBe('main.ts');
+    expect(ts.isSourceFile(cb.mock.lastCall?.[1])).toBeTruthy();
+    expect(cb.mock.lastCall?.[2]).toBe('version');
   });
 
   it('should register listener called back on acquireDocumentWithKey method', () => {
@@ -47,9 +47,9 @@ describe(registerDocumentChangeEvent, () => {
       'version',
     );
     expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb.mock.lastCall[0]).toBe('main.ts');
-    expect(ts.isSourceFile(cb.mock.lastCall[1])).toBeTruthy();
-    expect(cb.mock.lastCall[2]).toBe('version');
+    expect(cb.mock.lastCall?.[0]).toBe('main.ts');
+    expect(ts.isSourceFile(cb.mock.lastCall?.[1])).toBeTruthy();
+    expect(cb.mock.lastCall?.[2]).toBe('version');
   });
 
   it('should register listener called back on updateDocument method', () => {
@@ -62,9 +62,9 @@ describe(registerDocumentChangeEvent, () => {
     });
     docRegistry.updateDocument('main.ts', ts.getDefaultCompilerOptions(), new TestingScriptSnapshot(''), 'version');
     expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb.mock.lastCall[0]).toBe('main.ts');
-    expect(ts.isSourceFile(cb.mock.lastCall[1])).toBeTruthy();
-    expect(cb.mock.lastCall[2]).toBe('version');
+    expect(cb.mock.lastCall?.[0]).toBe('main.ts');
+    expect(ts.isSourceFile(cb.mock.lastCall?.[1])).toBeTruthy();
+    expect(cb.mock.lastCall?.[2]).toBe('version');
   });
 
   it('should register listener called back on updateDocumentWithKey method', () => {
@@ -84,9 +84,9 @@ describe(registerDocumentChangeEvent, () => {
       'version',
     );
     expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb.mock.lastCall[0]).toBe('main.ts');
-    expect(ts.isSourceFile(cb.mock.lastCall[1])).toBeTruthy();
-    expect(cb.mock.lastCall[2]).toBe('version');
+    expect(cb.mock.lastCall?.[0]).toBe('main.ts');
+    expect(ts.isSourceFile(cb.mock.lastCall?.[1])).toBeTruthy();
+    expect(cb.mock.lastCall?.[2]).toBe('version');
   });
 
   it('should register listener called back on releaseDocument method', () => {
@@ -100,7 +100,7 @@ describe(registerDocumentChangeEvent, () => {
     docRegistry.acquireDocument('main.ts', ts.getDefaultCompilerOptions(), new TestingScriptSnapshot(''), 'version');
     docRegistry.releaseDocument('main.ts', ts.getDefaultCompilerOptions(), ts.ScriptKind.TS, undefined);
     expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb.mock.lastCall[0]).toBe('main.ts');
+    expect(cb.mock.lastCall?.[0]).toBe('main.ts');
   });
 
   it('should register listener called back on releaseDocumentWithKey method', () => {
@@ -121,6 +121,6 @@ describe(registerDocumentChangeEvent, () => {
     );
     docRegistry.releaseDocumentWithKey('main.ts' as any, 'key' as any, ts.ScriptKind.TS, undefined);
     expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb.mock.lastCall[0]).toBe('main.ts');
+    expect(cb.mock.lastCall?.[0]).toBe('main.ts');
   });
 });
