@@ -321,7 +321,7 @@ describe(FragmentRegistry, () => {
 
     describe('cache', () => {
       it('should not use cached value when dependent fragment changes', () => {
-        const logger = jest.fn();
+        const logger = vi.fn();
         const registry = new FragmentRegistry({ logger });
         registry.registerDocuments('fragments.ts', '0', [
           {
@@ -360,7 +360,7 @@ describe(FragmentRegistry, () => {
       });
 
       it('should not use cached value when FragmentSpread set in target documentString changes', () => {
-        const logger = jest.fn();
+        const logger = vi.fn();
         const registry = new FragmentRegistry({ logger });
         registry.registerDocuments('fragments.ts', '0', [
           {
@@ -402,7 +402,7 @@ describe(FragmentRegistry, () => {
       });
 
       it('should not use cached value when FragmentDefinition set in target documentString changes', () => {
-        const logger = jest.fn();
+        const logger = vi.fn();
         const registry = new FragmentRegistry({ logger });
         registry.registerDocuments('fragments.ts', '0', [
           {
@@ -449,7 +449,7 @@ describe(FragmentRegistry, () => {
       });
 
       it('should use cached value', () => {
-        const logger = jest.fn();
+        const logger = vi.fn();
         const registry = new FragmentRegistry({ logger });
         registry.registerDocuments('fragments.ts', '0', [
           {

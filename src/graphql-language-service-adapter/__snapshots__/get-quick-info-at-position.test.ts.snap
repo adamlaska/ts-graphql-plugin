@@ -1,5 +1,5 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`getQuickInfoAtPosition should return GraphQL quick info 1`] = `"Query.hello: String!"`;
+exports[`getQuickInfoAtPosition > should return GraphQL quick info 1`] = `"Query.hello: String!"`;
 
-exports[`getQuickInfoAtPosition should return GraphQL quick info 2`] = `"Query.hello: String!"`;
+exports[`getQuickInfoAtPosition > should return GraphQL quick info 2`] = `"Query.hello: String!"`;

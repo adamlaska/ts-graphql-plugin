@@ -6,7 +6,7 @@ function createFixture(name: string) {
 }
 
 describe('getDefinitionAtPosition', () => {
-  const delegateFn = jest.fn(() => []);
+  const delegateFn = vi.fn(() => []);
 
   it('should not return definition info when the cursor does not point fragment spread', () => {
     const fixture = createFixture('input.ts');

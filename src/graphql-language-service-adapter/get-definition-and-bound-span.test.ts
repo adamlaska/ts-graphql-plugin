@@ -7,7 +7,7 @@ function createFixture(name: string) {
 }
 
 describe('getDefinitionAndBoundSpan', () => {
-  const delegateFn = jest.fn(() => undefined);
+  const delegateFn = vi.fn(() => undefined);
 
   beforeEach(() => {
     delegateFn.mockClear();

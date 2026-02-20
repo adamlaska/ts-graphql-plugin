@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`CLI parser result should show command help 1`] = `
+exports[`CLI parser result > should show command help 1`] = `
 "Usage: tsgql typegen [options]
 
 Description: Generate type files.
@@ -9,7 +9,7 @@ Options:
  -p, --project                            Path to tsconfig.json."
 `;
 
-exports[`CLI parser result should show global help 1`] = `
+exports[`CLI parser result > should show global help 1`] = `
 "Usage: tsgql <command> [options]
 
 available commands are:

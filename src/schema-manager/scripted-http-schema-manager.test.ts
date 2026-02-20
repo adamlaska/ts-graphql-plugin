@@ -4,13 +4,13 @@ describe(ScriptedHttpSchemaManager, () => {
   function createScriptedHttpSchemaManager(fromScript: string = './graphql-config') {
     const manager = {
       _host: {
-        getProjectRootPath: jest.fn(),
-        fileExists: jest.fn(),
+        getProjectRootPath: vi.fn(),
+        fileExists: vi.fn(),
       },
       _scriptFileName: fromScript,
       _options: null,
-      log: jest.fn(),
-      _requireScript: jest.fn(),
+      log: vi.fn(),
+      _requireScript: vi.fn(),
       _getScriptFilePath: ScriptedHttpSchemaManager.prototype['_getScriptFilePath'],
       _getOptions: ScriptedHttpSchemaManager.prototype['_getOptions'],
       _fetchErrorOcurred: ScriptedHttpSchemaManager.prototype['_fetchErrorOcurred'],
@@ -33,7 +33,7 @@ describe(ScriptedHttpSchemaManager, () => {
         Authorization: 'Bearer abcabcabc',
       },
     };
-    const configScriptMock = jest.fn().mockReturnValue(new Promise(resolve => resolve(requestSetup)));
+    const configScriptMock = vi.fn().mockReturnValue(new Promise(resolve => resolve(requestSetup)));
     const manager = createScriptedHttpSchemaManager();
     manager._host.getProjectRootPath.mockReturnValue('./');
     manager._host.fileExists.mockReturnValue(true);
@@ -52,7 +52,7 @@ describe(ScriptedHttpSchemaManager, () => {
         Authorization: 'Bearer abcabcabc',
       },
     };
-    const configScriptMock = jest.fn().mockReturnValue(new Promise(resolve => resolve(requestSetup)));
+    const configScriptMock = vi.fn().mockReturnValue(new Promise(resolve => resolve(requestSetup)));
     const manager = createScriptedHttpSchemaManager();
     manager._host.getProjectRootPath.mockReturnValue('./');
     manager._host.fileExists.mockReturnValue(true);
@@ -76,7 +76,7 @@ describe(ScriptedHttpSchemaManager, () => {
   });
 
   it('should throw error if configuration script throws error', async () => {
-    const configScriptMock = jest.fn().mockReturnValue(new Promise((_, reject) => reject(new Error('Some error'))));
+    const configScriptMock = vi.fn().mockReturnValue(new Promise((_, reject) => reject(new Error('Some error'))));
     const manager = createScriptedHttpSchemaManager();
     manager._host.fileExists.mockReturnValue(true);
     manager._host.getProjectRootPath.mockReturnValue('./');
@@ -96,7 +96,7 @@ describe(ScriptedHttpSchemaManager, () => {
         Authorization: 'Bearer abcabcabc',
       },
     };
-    const configScriptMock = jest.fn().mockReturnValue(new Promise(resolve => resolve(wrongRequestSetup)));
+    const configScriptMock = vi.fn().mockReturnValue(new Promise(resolve => resolve(wrongRequestSetup)));
     const manager = createScriptedHttpSchemaManager();
     manager._host.fileExists.mockReturnValue(true);
     manager._host.getProjectRootPath.mockReturnValue('./');
@@ -115,7 +115,7 @@ describe(ScriptedHttpSchemaManager, () => {
         Authorization: 'Bearer abcabcabc',
       },
     };
-    const configScriptMock = jest.fn().mockReturnValue(new Promise(resolve => resolve(wrongRequestSetup)));
+    const configScriptMock = vi.fn().mockReturnValue(new Promise(resolve => resolve(wrongRequestSetup)));
     const manager = createScriptedHttpSchemaManager();
     manager._host.fileExists.mockReturnValue(true);
     manager._host.getProjectRootPath.mockReturnValue('./');
@@ -134,7 +134,7 @@ describe(ScriptedHttpSchemaManager, () => {
         Authorization: 'Bearer abcabcabc',
       },
     };
-    const configScriptMock = jest.fn().mockReturnValue(new Promise(resolve => resolve(wrongRequestSetup)));
+    const configScriptMock = vi.fn().mockReturnValue(new Promise(resolve => resolve(wrongRequestSetup)));
     const manager = createScriptedHttpSchemaManager();
     manager._host.fileExists.mockReturnValue(true);
     manager._host.getProjectRootPath.mockReturnValue('./');
@@ -153,7 +153,7 @@ describe(ScriptedHttpSchemaManager, () => {
         Authorization: 'Bearer abcabcabc',
       },
     };
-    const configScriptMock = jest.fn().mockReturnValue(new Promise(resolve => resolve(wrongRequestSetup)));
+    const configScriptMock = vi.fn().mockReturnValue(new Promise(resolve => resolve(wrongRequestSetup)));
     const manager = createScriptedHttpSchemaManager();
     manager._host.fileExists.mockReturnValue(true);
     manager._host.getProjectRootPath.mockReturnValue('./');
@@ -171,7 +171,7 @@ describe(ScriptedHttpSchemaManager, () => {
         Authorization: 'Bearer abcabcabc',
       },
     };
-    const configScriptMock = jest.fn().mockReturnValue(new Promise(resolve => resolve(requestSetup)));
+    const configScriptMock = vi.fn().mockReturnValue(new Promise(resolve => resolve(requestSetup)));
     const manager = createScriptedHttpSchemaManager();
     manager._host.getProjectRootPath.mockReturnValue('./');
     manager._host.fileExists.mockReturnValue(true);
@@ -193,7 +193,7 @@ describe(ScriptedHttpSchemaManager, () => {
         Authorization: 'Bearer abcabcabc',
       },
     };
-    const configScriptMock = jest.fn().mockReturnValue(new Promise(resolve => resolve(requestSetup)));
+    const configScriptMock = vi.fn().mockReturnValue(new Promise(resolve => resolve(requestSetup)));
     const manager = createScriptedHttpSchemaManager();
     manager._host.getProjectRootPath.mockReturnValue('./');
     manager._host.fileExists.mockReturnValue(true);
@@ -216,7 +216,7 @@ describe(ScriptedHttpSchemaManager, () => {
         Authorization: 'Bearer abcabcabc',
       },
     };
-    const configScriptMock = jest.fn().mockReturnValue(new Promise(resolve => resolve(requestSetup)));
+    const configScriptMock = vi.fn().mockReturnValue(new Promise(resolve => resolve(requestSetup)));
     const manager = createScriptedHttpSchemaManager();
     manager._host.getProjectRootPath.mockReturnValue('./');
     manager._host.fileExists.mockReturnValue(true);
