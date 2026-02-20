@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "types": ["vitest/globals"],
+    "types": ["node", "vitest/globals"],
     "skipLibCheck": true,
     "incremental": true,
     "module": "commonjs",
